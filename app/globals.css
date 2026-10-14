@@ -630,3 +630,55 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   font-family: Tahoma, "Vazirmatn", Arial, sans-serif !important;
   font-weight: 500;
 }
+
+
+/* Fix desktop Jalali calendar cell geometry: every day stays inside its own equal-width cell. */
+.date-picker-wrap .date-picker-popover {
+  width: min(360px, calc(100vw - 32px)) !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  box-sizing: border-box;
+}
+.date-picker-wrap .date-picker-main {
+  width: 100%;
+  min-width: 0;
+}
+.date-picker-wrap .date-picker-weekdays,
+.date-picker-wrap .date-picker-days {
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  gap: 4px !important;
+  width: 100%;
+}
+.date-picker-wrap .date-picker-weekdays span {
+  min-width: 0;
+  overflow: hidden;
+}
+.date-picker-wrap .date-picker-day {
+  box-sizing: border-box;
+  width: 100% !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  aspect-ratio: auto !important;
+  padding: 0 !important;
+  margin: 0;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-family: Tahoma, Arial, sans-serif !important;
+  font-size: 13px !important;
+  line-height: 1 !important;
+  font-variant-numeric: lining-nums tabular-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  white-space: nowrap;
+}
+.date-picker-wrap .date-picker-side {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  padding: 10px 0 0;
+  border-right: 0;
+  border-top: 1px solid #edf0f6;
+}
+.date-picker-wrap .date-picker-side > strong,
+.date-picker-wrap .date-picker-side label {
+  grid-column: 1 / -1;
+}
