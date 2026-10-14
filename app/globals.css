@@ -244,3 +244,52 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
  .date-picker-wrap .date-picker-day{min-height:29px;font-size:12px!important}
  .date-picker-wrap .date-picker-actions{grid-column:1/-1}
 }
+
+
+/* Subtle page entrance and responsive interaction motion */
+@keyframes pageRiseIn{
+  from{opacity:0;transform:translate3d(0,12px,0)}
+  to{opacity:1;transform:translate3d(0,0,0)}
+}
+@keyframes softFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes modalRiseIn{
+  from{opacity:0;transform:translate3d(0,10px,0) scale(.99)}
+  to{opacity:1;transform:translate3d(0,0,0) scale(1)}
+}
+.topbar{animation:softFadeIn .35s ease-out both}
+.sidebar{animation:pageRiseIn .42s cubic-bezier(.2,.7,.2,1) both}
+.content{animation:pageRiseIn .48s cubic-bezier(.2,.7,.2,1) both}
+.page-heading{animation:pageRiseIn .42s .04s cubic-bezier(.2,.7,.2,1) both}
+.stat-card,.tasks-section,.calendar-card,.upcoming-card,.settings-card,.tip-card{
+  animation:pageRiseIn .48s cubic-bezier(.2,.7,.2,1) both;
+  transition:box-shadow .22s ease,border-color .22s ease,transform .22s ease;
+}
+.stats-grid .stat-card:nth-child(2){animation-delay:.05s}
+.stats-grid .stat-card:nth-child(3){animation-delay:.1s}
+.stats-grid .stat-card:nth-child(4){animation-delay:.15s}
+.workspace-grid>.tasks-section{animation-delay:.08s}
+.workspace-grid>.right-column{animation:pageRiseIn .48s .13s cubic-bezier(.2,.7,.2,1) both}
+.task-row{animation:softFadeIn .25s ease-out both;transition:background-color .18s ease,padding-inline .18s ease}
+.task-row:hover{background:#fbfaff}
+.nav-item,.icon-btn,.notification-btn,.date-chip,.filter-wrap,.search-box,.task-check,.secondary-btn,.reminder-option{
+  transition:color .18s ease,background-color .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease;
+}
+.nav-item:active,.icon-btn:active,.primary-btn:active,.secondary-btn:active,.add-task-button:active{transform:scale(.98)}
+.add-task-button,.primary-btn{transition:background .18s ease,transform .18s ease,box-shadow .18s ease}
+.add-task-button:hover,.primary-btn:hover{box-shadow:0 7px 18px #6c5ce72a}
+.modal-backdrop{animation:softFadeIn .16s ease-out both}
+.task-modal{animation:modalRiseIn .22s cubic-bezier(.2,.75,.25,1) both}
+.date-picker-popover{transform-origin:top right}
+.date-picker-day:active{transform:scale(.94)}
+@media(hover:hover) and (pointer:fine){
+ .stat-card:hover,.calendar-card:hover,.upcoming-card:hover,.tip-card:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(34,42,76,.07)}
+}
+@media(max-width:700px){
+ .content{animation-duration:.35s;padding-top:23px}
+ .sidebar{animation:none}
+ .stat-card,.tasks-section,.calendar-card,.upcoming-card,.settings-card,.tip-card{animation-duration:.35s}
+ .task-row{animation:none}
+}
+@media(prefers-reduced-motion:reduce){
+ *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
