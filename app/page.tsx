@@ -348,8 +348,6 @@ export default function Home() {
       const registration = await getNotificationRegistration();
       await registration.showNotification("ددلاین | اعلان آزمایشی", {
         body: "اعلان‌های این دستگاه فعال هستند.",
-        icon: "/icon-192.png",
-        badge: "/icon-192.png",
         tag: "deadline-manager-test",
         data: { url: "/" }
       });
