@@ -216,3 +216,31 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .date-picker-actions{grid-column:1/-1;display:flex;justify-content:flex-start;gap:8px;padding-top:12px;border-top:1px solid #edf0f6}
 .date-picker-actions button{min-height:38px}
 @media(max-width:520px){.date-picker-popover{grid-template-columns:1fr;padding:11px;gap:12px}.date-picker-side{border-right:0;border-top:1px solid #edf0f6;padding:12px 0 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.date-picker-side>strong,.date-picker-side label{grid-column:1/-1}.date-picker-side label{margin-top:2px}.date-picker-actions{grid-column:1}.date-picker-day{border-radius:7px;font-size:12px}}
+
+/* Layout correction for the date picker inside the task modal */
+.date-picker-wrap{position:relative;width:100%;min-width:0}
+.date-picker-wrap .date-picker-trigger{width:100%;min-height:42px;display:flex!important;flex-direction:row!important;justify-content:flex-start;align-items:center;gap:10px;margin:8px 0 0;padding:10px 12px;font-size:12px;line-height:1.5}
+.date-picker-wrap .date-picker-trigger span{display:block!important;flex:1;font-size:12px!important;font-weight:600!important;color:var(--ink)!important}
+.date-picker-wrap .date-picker-popover{position:absolute;top:100%;right:0;left:0;width:100%;max-width:100%;max-height:min(68vh,540px);overflow-y:auto;z-index:100;display:grid!important;grid-template-columns:minmax(0,1.25fr) minmax(125px,.8fr);align-items:start;gap:12px;margin-top:8px;padding:12px;background:#fff;border:1px solid #e7eaf3;border-radius:14px;box-shadow:0 16px 44px rgba(31,44,83,.18)}
+.date-picker-wrap .date-picker-main{width:100%;min-width:0}
+.date-picker-wrap .date-picker-month{display:flex!important;flex-direction:row!important;align-items:center;justify-content:space-between;gap:4px;margin:0 0 10px}
+.date-picker-wrap .date-picker-month strong{font-size:13px!important;color:#252b3c!important}
+.date-picker-wrap .date-picker-weekdays,.date-picker-wrap .date-picker-days{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;gap:3px!important;width:100%;text-align:center;direction:rtl}
+.date-picker-wrap .date-picker-weekdays span{display:block!important;text-align:center;padding:5px 0;font-size:11px!important;color:#858ba0!important}
+.date-picker-wrap .date-picker-day{display:grid!important;place-items:center;width:100%;min-width:0;min-height:30px;aspect-ratio:1;padding:0;font-size:12px!important;line-height:1;border:0;border-radius:8px;background:transparent;color:#34394c}
+.date-picker-wrap .date-picker-day.selected{background:#4169f5;color:white}
+.date-picker-wrap .date-picker-side{display:flex;flex-direction:column;gap:6px;min-width:0;padding-right:10px;border-right:1px solid #edf0f6}
+.date-picker-wrap .date-picker-side>strong{display:block;font-size:11px!important;color:#34394c!important}
+.date-picker-wrap .date-picker-side>button{display:flex!important;flex-direction:row!important;align-items:center;justify-content:flex-start;gap:6px;width:100%;min-width:0;padding:8px 7px;font-size:10px!important;white-space:normal;text-align:right}
+.date-picker-wrap .date-picker-side label{display:grid;gap:6px;margin-top:4px;padding-top:8px;font-size:11px!important}
+.date-picker-wrap .date-picker-side input{width:100%;min-width:0;font-size:12px;padding:8px}
+.date-picker-wrap .date-picker-actions{grid-column:1/-1;display:flex!important;flex-direction:row!important;justify-content:flex-start;gap:8px;padding-top:10px}
+.date-picker-wrap .date-picker-actions button{display:inline-flex!important;flex-direction:row!important;align-items:center;justify-content:center;min-height:36px;padding:0 12px;font-size:11px}
+@media(max-width:520px){
+ .date-picker-wrap .date-picker-popover{grid-template-columns:minmax(0,1fr)!important;max-height:65vh;padding:10px;gap:10px}
+ .date-picker-wrap .date-picker-side{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:10px 0 0;border-right:0;border-top:1px solid #edf0f6}
+ .date-picker-wrap .date-picker-side>strong,.date-picker-wrap .date-picker-side label{grid-column:1/-1}
+ .date-picker-wrap .date-picker-side label{margin-top:0}
+ .date-picker-wrap .date-picker-day{min-height:29px;font-size:12px!important}
+ .date-picker-wrap .date-picker-actions{grid-column:1/-1}
+}
