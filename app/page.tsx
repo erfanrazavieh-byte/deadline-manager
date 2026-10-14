@@ -6,7 +6,7 @@ import {
   AlarmClock, ArrowDownWideNarrow, Bell, CalendarDays, Check, CheckCheck, Sun, Moon,
   ChevronDown, Circle, Clock3, LayoutDashboard, ListTodo, MoreHorizontal,
   Plus, Search, Settings2, SlidersHorizontal, Trash2, X, Pencil, ChevronLeft,
-  ChevronRight, CalendarClock, CircleAlert, Sparkles, Menu, CheckCircle2
+  ChevronRight, CalendarClock, CircleAlert, Menu, CheckCircle2
 } from "lucide-react";
 
 // تبدیل تاریخ شمسی انتخاب‌شده به رشته میلادی قابل ذخیره در دیتابیس
@@ -502,7 +502,6 @@ export default function Home() {
           })}
         </nav>
         <div className="sidebar-bottom">
-          <div className="focus-card"><div className="focus-icon"><Sparkles size={17}/></div><strong>قدم‌به‌قدم جلو برو</strong><p>کارهای بزرگ با انجام کارهای کوچک تمام می‌شوند.</p></div>
           <button className="nav-item theme-toggle" onClick={toggleTheme} aria-label="تغییر حالت روشن و تاریک"><span className="theme-toggle-icon">{theme === "dark" || (theme === "system" && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches) ? <Sun size={18}/> : <Moon size={18}/>}</span><span>{theme === "dark" || (theme === "system" && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "حالت روز" : "حالت شب"}</span></button>
           <button className={`nav-item ${showSettings?"active":""}`} onClick={()=>{setShowSettings(!showSettings);setMobileMenu(false);}}><Settings2 size={18}/><span>تنظیمات</span></button>
           <div className="profile-row"><div className="avatar">ا</div><div className="profile-text"><strong>فضای شخصی</strong><span>{user.email || "حساب کاربری"}</span></div><MoreHorizontal size={19} className="muted"/></div>
@@ -590,7 +589,7 @@ export default function Home() {
                   {activeTasks.filter(t=>new Date(t.due)>=new Date()).sort((a,b)=>+new Date(a.due)-+new Date(b.due)).slice(0,3).map((t,i)=><div className="upcoming-item" key={t.id}><div className={`upcoming-line line-${i}`}/><div><strong>{t.title}</strong><span>{faDateTime(t.due)}</span></div><small>{timeLeft(t.due, clockNow)}</small></div>)}
                   {activeTasks.filter(t=>new Date(t.due)>=new Date()).length===0&&<p className="muted empty-upcoming">ددلاین آینده‌ای ثبت نشده.</p>}
                 </div>
-                <div className="tip-card"><div className="tip-icon"><Sparkles size={18}/></div><div><strong>بیت امروز از {dailyVerse.poet}</strong><p className="daily-verse">{dailyVerse.first}<br/>{dailyVerse.second}</p></div></div>
+                <div className="tip-card"><div><strong>بیت امروز از {dailyVerse.poet}</strong><p className="daily-verse">{dailyVerse.first}<br/>{dailyVerse.second}</p></div></div>
               </aside>
             </div>
           </div>
