@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import {
-  AlarmClock, ArrowDownWideNarrow, Bell, CalendarDays, Check, CheckCheck,
+  AlarmClock, ArrowDownWideNarrow, Bell, CalendarDays, Check, CheckCheck, Sun, Moon,
   ChevronDown, Circle, Clock3, LayoutDashboard, ListTodo, MoreHorizontal,
   Plus, Search, Settings2, SlidersHorizontal, Trash2, X, Pencil, ChevronLeft,
   ChevronRight, CalendarClock, CircleAlert, Sparkles, Menu, CheckCircle2
@@ -119,6 +119,7 @@ export default function Home() {
   const [permission, setPermission] = useState("default");
   const [toast, setToast] = useState("");
   const [mobileMenu, setMobileMenu] = useState(false);
+  const [theme, setTheme] = useState<"system" | "light" | "dark">("system");
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -129,6 +130,8 @@ export default function Home() {
   const [authBusy, setAuthBusy] = useState(false);
 
   useEffect(() => {
+    const savedTheme = localStorage.getItem("deadline-manager-theme");
+    if (savedTheme === "light" || savedTheme === "dark") setTheme(savedTheme);
     setNotifications(localStorage.getItem("deadline-manager-notifications") === "true");
     if ("Notification" in window) setPermission(Notification.permission);
     supabase.auth.getSession().then(({ data, error }) => {
@@ -222,6 +225,18 @@ export default function Home() {
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, [tasks, user?.id, notifications, permission]);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    if (theme === "system") localStorage.removeItem("deadline-manager-theme");
+    else localStorage.setItem("deadline-manager-theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const currentlyDark = theme === "dark" || (theme === "system" && systemDark);
+    setTheme(currentlyDark ? "light" : "dark");
+  };
 
   const activeTasks = tasks.filter(t => t.status !== "done");
   const todayStart = new Date(); todayStart.setHours(0,0,0,0);
@@ -427,6 +442,7 @@ export default function Home() {
         </nav>
         <div className="sidebar-bottom">
           <div className="focus-card"><div className="focus-icon"><Sparkles size={17}/></div><strong>قدم‌به‌قدم جلو برو</strong><p>کارهای بزرگ با انجام کارهای کوچک تمام می‌شوند.</p></div>
+          <button className="nav-item theme-toggle" onClick={toggleTheme} aria-label="تغییر حالت روشن و تاریک"><span className="theme-toggle-icon">{theme === "dark" || (theme === "system" && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches) ? <Sun size={18}/> : <Moon size={18}/>}</span><span>{theme === "dark" || (theme === "system" && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "حالت روز" : "حالت شب"}</span></button>
           <button className={`nav-item ${showSettings?"active":""}`} onClick={()=>{setShowSettings(!showSettings);setMobileMenu(false);}}><Settings2 size={18}/><span>تنظیمات</span></button>
           <div className="profile-row"><div className="avatar">ا</div><div className="profile-text"><strong>فضای شخصی</strong><span>{user.email || "حساب کاربری"}</span></div><MoreHorizontal size={19} className="muted"/></div>
         </div>
