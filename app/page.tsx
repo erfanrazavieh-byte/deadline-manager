@@ -65,18 +65,18 @@ const faDate = (date: Date, opts: Intl.DateTimeFormatOptions = {}) =>
 const faDateTime = (value: string) => new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
   day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"
 }).format(new Date(value));
-const timeLeft = (value: string) => {
-  const delta = new Date(value).getTime() - Date.now();
-  const totalMinutes = Math.floor(Math.abs(delta) / 60000);
-  const days = Math.floor(totalMinutes / 1440);
-  const hours = Math.floor((totalMinutes % 1440) / 60);
-  const minutes = totalMinutes % 60;
-  const parts: string[] = [];
-  if (days) parts.push(`${days.toLocaleString("fa-IR")} روز`);
-  if (hours) parts.push(`${hours.toLocaleString("fa-IR")} ساعت`);
-  if (minutes && days === 0) parts.push(`${minutes.toLocaleString("fa-IR")} دقیقه`);
-  if (!parts.length) parts.push("کمتر از یک دقیقه");
-  return delta < 0 ? `${parts.join(" و ")} تأخیر` : `${parts.join(" و ")} باقی‌مانده`;
+const timeLeft = (value: string, now: number = Date.now()) => {
+  const delta = new Date(value).getTime() - now;
+  const totalSeconds = Math.floor(Math.abs(delta) / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  const pad = (n: number) => String(n).padStart(2, "0").toLocaleString("fa-IR");
+  const countdown = days > 0
+    ? `${days.toLocaleString("fa-IR")} روز ${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
+    : `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+  return delta < 0 ? `${countdown} تأخیر` : countdown;
 };
 const emptyForm = () => ({
   title: "", description: "", due: "", category: "دانشگاه" as Category,
@@ -87,7 +87,7 @@ const emptyForm = () => ({
 export default function Home() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [clockNow, setClockNow] = useState(() => Date.now());
-  void clockNow;
+
   const [ready, setReady] = useState(false);
   const [activeNav, setActiveNav] = useState("همه کارها");
   const [query, setQuery] = useState("");
@@ -540,7 +540,7 @@ export default function Home() {
               <div className="stat-card"><div className="stat-top"><span>کارهای فعال</span><div className="stat-icon purple"><ListTodo size={18}/></div></div><div className="stat-value">{activeTasks.length.toLocaleString("fa-IR")}</div><div className="stat-foot"><span className="dot purple-dot"/>کار باقی‌مانده</div></div>
               <div className="stat-card"><div className="stat-top"><span>ددلاین امروز</span><div className="stat-icon blue"><CalendarDays size={18}/></div></div><div className="stat-value">{todayTasks.length.toLocaleString("fa-IR")}</div><div className="stat-foot">برای امروز برنامه‌ریزی شده</div></div>
               <div className="stat-card"><div className="stat-top"><span>عقب‌افتاده</span><div className="stat-icon red"><Clock3 size={18}/></div></div><div className="stat-value">{overdueTasks.length.toLocaleString("fa-IR")}</div><div className="stat-foot">{overdueTasks.length?"نیازمند بررسی":"همه‌چیز تحت کنترل"}</div></div>
-              <div className="stat-card next-stat"><div className="stat-top"><span>نزدیک‌ترین ددلاین</span><div className="stat-icon green"><AlarmClock size={18}/></div></div><div className="next-title">{nextTask?.title || "ددلاین فعالی نیست"}</div><div className="stat-foot">{nextTask?timeLeft(nextTask.due):"می‌توانی یک کار جدید بسازی"}</div></div>
+              <div className="stat-card next-stat"><div className="stat-top"><span>نزدیک‌ترین ددلاین</span><div className="stat-icon green"><AlarmClock size={18}/></div></div><div className="next-title">{nextTask?.title || "ددلاین فعالی نیست"}</div><div className="stat-foot">{nextTask?timeLeft(nextTask.due, clockNow):"می‌توانی یک کار جدید بسازی"}</div></div>
             </div>}
 
             <div className="workspace-grid">
@@ -562,7 +562,7 @@ export default function Home() {
                           {task.description&&<p className="task-description">{task.description}</p>}
                           <div className="task-meta"><span className={`category-tag ${task.category==="دانشگاه"?"cat-study":task.category==="کار"?"cat-work":task.category==="پروژه شخصی"?"cat-project":"cat-life"}`}><i/>{task.category}</span><span className="task-due"><Clock3 size={13}/>{faDateTime(task.due)}</span>{task.reminders.length>0&&<span className="reminder-count"><Bell size={12}/>{task.reminders.length} یادآور</span>}</div>
                         </div>
-                        <div className="task-end"><span className={`priority priority-${task.priority}`}>{task.priority==="high"?"زیاد":task.priority==="medium"?"متوسط":"کم"}</span><span className={`time-left ${late?"time-late":""}`}>{task.status==="done"?"انجام‌شده":timeLeft(task.due)}</span></div>
+                        <div className="task-end"><span className={`priority priority-${task.priority}`}>{task.priority==="high"?"زیاد":task.priority==="medium"?"متوسط":"کم"}</span><span className={`time-left ${late?"time-late":""}`}>{task.status==="done"?"انجام‌شده":timeLeft(task.due, clockNow)}</span></div>
                         <div className="task-actions"><button className="icon-btn small-icon" onClick={()=>openEdit(task)} aria-label="ویرایش"><Pencil size={15}/></button><button className="icon-btn small-icon delete-icon" onClick={()=>deleteTask(task)} aria-label="حذف"><Trash2 size={15}/></button></div>
                       </article>;
                     })
@@ -587,7 +587,7 @@ export default function Home() {
                   <div className="calendar-legend"><span><i className="legend-dot"/> دارای ددلاین</span><span><i className="legend-today"/> امروز</span></div>
                 </div>
                 <div className="upcoming-card"><div className="upcoming-head"><h2>در یک نگاه</h2><span className="upcoming-icon"><AlarmClock size={17}/></span></div>
-                  {activeTasks.filter(t=>new Date(t.due)>=new Date()).sort((a,b)=>+new Date(a.due)-+new Date(b.due)).slice(0,3).map((t,i)=><div className="upcoming-item" key={t.id}><div className={`upcoming-line line-${i}`}/><div><strong>{t.title}</strong><span>{faDateTime(t.due)}</span></div><small>{timeLeft(t.due)}</small></div>)}
+                  {activeTasks.filter(t=>new Date(t.due)>=new Date()).sort((a,b)=>+new Date(a.due)-+new Date(b.due)).slice(0,3).map((t,i)=><div className="upcoming-item" key={t.id}><div className={`upcoming-line line-${i}`}/><div><strong>{t.title}</strong><span>{faDateTime(t.due)}</span></div><small>{timeLeft(t.due, clockNow)}</small></div>)}
                   {activeTasks.filter(t=>new Date(t.due)>=new Date()).length===0&&<p className="muted empty-upcoming">ددلاین آینده‌ای ثبت نشده.</p>}
                 </div>
                 <div className="tip-card"><div className="tip-icon"><Sparkles size={18}/></div><div><strong>بیت امروز از {dailyVerse.poet}</strong><p className="daily-verse">{dailyVerse.first}<br/>{dailyVerse.second}</p></div></div>
