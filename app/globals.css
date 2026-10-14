@@ -497,3 +497,26 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   :root[data-theme="system"] .mobile-bottom button:nth-child(3){color:#a99dff}
   :root[data-theme="system"] .date-picker-wrap .date-picker-day{color:#dce2f1}
 }
+
+
+/* Deadline markers in the monthly calendar: clear contrast in both themes. */
+.calendar-day.has-task:not(.today){
+  background:#eee9ff!important;
+  color:#5141a8!important;
+  border:1px solid #d7ccff!important;
+  font-weight:700!important;
+}
+.calendar-day.has-task:not(.today):hover{background:#dfd6ff!important;color:#3f318e!important}
+.calendar-day.today{background:#7464e8!important;color:#fff!important}
+:root[data-theme="dark"] .calendar-day.has-task:not(.today){
+  background:#30294a!important;color:#d8ceff!important;border-color:#51447d!important;
+}
+:root[data-theme="dark"] .calendar-day.has-task:not(.today):hover{background:#40345f!important;color:#fff!important}
+:root[data-theme="dark"] .calendar-day.today{background:#8a7af4!important;color:#fff!important}
+@media(prefers-color-scheme:dark){
+  :root[data-theme="system"] .calendar-day.has-task:not(.today){
+    background:#30294a!important;color:#d8ceff!important;border-color:#51447d!important;
+  }
+  :root[data-theme="system"] .calendar-day.has-task:not(.today):hover{background:#40345f!important;color:#fff!important}
+  :root[data-theme="system"] .calendar-day.today{background:#8a7af4!important;color:#fff!important}
+}
