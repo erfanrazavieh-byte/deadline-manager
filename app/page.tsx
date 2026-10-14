@@ -143,6 +143,44 @@ export default function Home() {
     return () => window.clearTimeout(timer);
   }, [toast]);
 
+  useEffect(() => {
+    if (!user?.id || !notifications || permission !== "granted" || !("Notification" in window)) return;
+    const checkReminders = () => {
+      const now = Date.now();
+      for (const task of tasks) {
+        if (task.status === "done") continue;
+        for (const reminder of task.reminders || []) {
+          const key = `deadline-manager-sent-${user.id}-${task.id}-${reminder.id}`;
+          if (localStorage.getItem(key) === "true") continue;
+          const reminderTime = new Date(reminder.at).getTime();
+          if (!Number.isFinite(reminderTime)) {
+            localStorage.setItem(key, "true");
+            continue;
+          }
+          // Don't send stale reminders after the user reopens the site.
+          if (reminderTime < now - 2 * 60 * 1000) {
+            localStorage.setItem(key, "true");
+            continue;
+          }
+          if (reminderTime <= now) {
+            try {
+              new Notification("یادآوری ددلاین", {
+                body: task.title,
+                tag: `deadline-${task.id}-${reminder.id}`
+              });
+              localStorage.setItem(key, "true");
+            } catch {
+              // Browser or device may block notifications.
+            }
+          }
+        }
+      }
+    };
+    checkReminders();
+    const interval = window.setInterval(checkReminders, 15000);
+    return () => window.clearInterval(interval);
+  }, [tasks, user?.id, notifications, permission]);
+
   const activeTasks = tasks.filter(t => t.status !== "done");
   const todayStart = new Date(); todayStart.setHours(0,0,0,0);
   const tomorrow = new Date(todayStart); tomorrow.setDate(tomorrow.getDate()+1);
