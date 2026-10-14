@@ -199,8 +199,14 @@ export default function Home() {
   const [authBusy, setAuthBusy] = useState(false);
 
   useEffect(() => {
-    const clock = window.setInterval(() => setClockNow(Date.now()), 1_000);
-    return () => window.clearInterval(clock);
+    const updateClock = () => setClockNow(Date.now());
+    updateClock();
+    const clock = window.setInterval(updateClock, 1_000);
+    document.addEventListener("visibilitychange", updateClock);
+    return () => {
+      window.clearInterval(clock);
+      document.removeEventListener("visibilitychange", updateClock);
+    };
   }, []);
 
   useEffect(() => {
