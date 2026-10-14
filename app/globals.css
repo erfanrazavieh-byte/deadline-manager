@@ -553,3 +553,38 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 @media(max-width:700px){
   .date-picker-side>button{min-height:44px;padding:10px;font-size:12px}
 }
+
+
+/* Suggested reminder controls: soften the bright panel in dark mode. */
+:root[data-theme="dark"] .reminder-field{
+  background:#171b26!important;
+  border-color:#30384b!important;
+}
+:root[data-theme="dark"] .reminder-option{
+  background:#222838!important;
+  color:#c5cce0!important;
+  border-color:#3a4258!important;
+}
+:root[data-theme="dark"] .reminder-option.selected{
+  background:#302b50!important;
+  color:#d0c8ff!important;
+  border-color:#7567bd!important;
+}
+:root[data-theme="dark"] .reminder-label span{color:#a0a8bf!important}
+@media(prefers-color-scheme:dark){
+  :root[data-theme="system"] .reminder-field{
+    background:#171b26!important;
+    border-color:#30384b!important;
+  }
+  :root[data-theme="system"] .reminder-option{
+    background:#222838!important;
+    color:#c5cce0!important;
+    border-color:#3a4258!important;
+  }
+  :root[data-theme="system"] .reminder-option.selected{
+    background:#302b50!important;
+    color:#d0c8ff!important;
+    border-color:#7567bd!important;
+  }
+  :root[data-theme="system"] .reminder-label span{color:#a0a8bf!important}
+}
