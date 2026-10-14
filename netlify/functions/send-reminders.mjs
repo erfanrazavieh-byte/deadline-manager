@@ -2,7 +2,6 @@ import { createClient } from "@supabase/supabase-js";
 import {
   createCipheriv,
   createPrivateKey,
-  createPublicKey,
   createSign,
   diffieHellman,
   generateKeyPairSync,
