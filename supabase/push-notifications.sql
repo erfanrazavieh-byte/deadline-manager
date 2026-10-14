@@ -80,7 +80,7 @@ begin
       r.item ->> 'id' as reminder_id,
       ((r.item ->> 'at')::timestamp without time zone at time zone 'UTC') as scheduled_at
     from public.tasks t
-    cross join lateral jsonb_array_elements(coalesce(t.reminders, '[]'::jsonb)) as r(item)
+    cross join lateral jsonb_array_elements(coalesce(t.reminders::jsonb, '[]'::jsonb)) as r(item)
     where t.status <> 'done'
       and coalesce(r.item ->> 'id', '') <> ''
       and coalesce(r.item ->> 'at', '') <> ''
