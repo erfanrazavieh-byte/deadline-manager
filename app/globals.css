@@ -293,3 +293,140 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 @media(prefers-reduced-motion:reduce){
  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+
+
+/* Theme toggle: follows the device by default, with an optional manual override. */
+.theme-toggle-icon{display:flex;align-items:center;justify-content:center}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#11131a;--surface:#1a1d27;--ink:#edf0f8;--muted:#a0a6b8;--line:#303443;
+  --purple:#9185ff;--purple-light:#2b2746;--shadow:0 6px 24px rgba(0,0,0,.18);
+}
+@media (prefers-color-scheme: dark){
+  :root[data-theme="system"]{
+    color-scheme:dark;
+    --bg:#11131a;--surface:#1a1d27;--ink:#edf0f8;--muted:#a0a6b8;--line:#303443;
+    --purple:#9185ff;--purple-light:#2b2746;--shadow:0 6px 24px rgba(0,0,0,.18);
+  }
+}
+:root[data-theme="dark"] body,
+:root[data-theme="system"] body{background:var(--bg);color:var(--ink)}
+:root[data-theme="dark"] .sidebar,
+:root[data-theme="dark"] .topbar,
+:root[data-theme="dark"] .settings-card,
+:root[data-theme="dark"] .stat-card,
+:root[data-theme="dark"] .task-row,
+:root[data-theme="dark"] .calendar-card,
+:root[data-theme="dark"] .upcoming-card,
+:root[data-theme="dark"] .task-modal,
+:root[data-theme="dark"] .date-picker-popover,
+:root[data-theme="dark"] .search-box,
+:root[data-theme="dark"] .filter-wrap,
+:root[data-theme="dark"] .date-picker-trigger,
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] textarea,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] .settings-row,
+:root[data-theme="dark"] .profile-row,
+:root[data-theme="dark"] .mobile-bottom,
+:root[data-theme="dark"] .empty-state,
+:root[data-theme="dark"] .tip-card,
+:root[data-theme="dark"] .focus-card,
+:root[data-theme="dark"] .date-chip,
+:root[data-theme="dark"] .secondary-btn,
+:root[data-theme="dark"] .icon-btn,
+:root[data-theme="dark"] .date-picker-side,
+:root[data-theme="dark"] .date-picker-day,
+:root[data-theme="dark"] .reminder-option{
+  background-color:#1a1d27;color:var(--ink);border-color:var(--line)
+}
+:root[data-theme="dark"] .nav-item{color:#b4b8c8}
+:root[data-theme="dark"] .nav-item:hover,
+:root[data-theme="dark"] .nav-item.active{background:#2b2746;color:#bcb4ff}
+:root[data-theme="dark"] .focus-card{background:#211e35;border-color:#373052}
+:root[data-theme="dark"] .brand-mark{background:var(--purple);color:#11131a}
+:root[data-theme="dark"] .task-description,
+:root[data-theme="dark"] .settings-copy p,
+:root[data-theme="dark"] .page-heading p,
+:root[data-theme="dark"] .breadcrumbs,
+:root[data-theme="dark"] .muted,
+:root[data-theme="dark"] .stat-foot,
+:root[data-theme="dark"] .calendar-head p,
+:root[data-theme="dark"] .upcoming-item span,
+:root[data-theme="dark"] .focus-card p{color:var(--muted)}
+:root[data-theme="dark"] .stat-icon,
+:root[data-theme="dark"] .settings-icon{background:#292d3c}
+:root[data-theme="dark"] .nav-item small{background:#292d3c;color:#d3d6e2}
+:root[data-theme="dark"] .calendar-day{color:var(--ink)}
+:root[data-theme="dark"] .calendar-day:hover,
+:root[data-theme="dark"] .date-picker-day:hover{background:#302b4d}
+:root[data-theme="dark"] .modal-backdrop{background:rgba(0,0,0,.72)}
+:root[data-theme="dark"] .mobile-overlay{background:rgba(0,0,0,.65)}
+:root[data-theme="dark"] .settings-note{background:#202436;border-color:#353b50;color:#cbd2e8}
+:root[data-theme="dark"] .task-row,
+:root[data-theme="dark"] .settings-row,
+:root[data-theme="dark"] .calendar-card,
+:root[data-theme="dark"] .upcoming-card{box-shadow:var(--shadow)}
+:root[data-theme="dark"] .date-picker-weekdays,
+:root[data-theme="dark"] .calendar-legend{color:var(--muted)}
+:root[data-theme="dark"] .date-picker-day.selected{background:var(--purple);color:#fff}
+:root[data-theme="dark"] .primary-btn,
+:root[data-theme="dark"] .add-task-button{background:#7467e8;color:#fff}
+:root[data-theme="dark"] .secondary-btn:hover,
+:root[data-theme="dark"] .icon-btn:hover{background:#2b2f3e}
+:root[data-theme="dark"] .task-modal .field-label{color:var(--ink)}
+:root[data-theme="dark"] .task-modal input,
+:root[data-theme="dark"] .task-modal textarea,
+:root[data-theme="dark"] .task-modal select{background:#11131a;color:var(--ink);border-color:var(--line)}
+:root[data-theme="dark"] .date-picker-side{background:#171a23}
+:root[data-theme="dark"] .date-picker-side button{color:var(--ink)}
+@media (prefers-color-scheme: dark){
+  :root[data-theme="system"] .sidebar,
+  :root[data-theme="system"] .topbar,
+  :root[data-theme="system"] .settings-card,
+  :root[data-theme="system"] .stat-card,
+  :root[data-theme="system"] .task-row,
+  :root[data-theme="system"] .calendar-card,
+  :root[data-theme="system"] .upcoming-card,
+  :root[data-theme="system"] .task-modal,
+  :root[data-theme="system"] .date-picker-popover,
+  :root[data-theme="system"] .search-box,
+  :root[data-theme="system"] .filter-wrap,
+  :root[data-theme="system"] .date-picker-trigger,
+  :root[data-theme="system"] input,
+  :root[data-theme="system"] textarea,
+  :root[data-theme="system"] select,
+  :root[data-theme="system"] .settings-row,
+  :root[data-theme="system"] .profile-row,
+  :root[data-theme="system"] .mobile-bottom,
+  :root[data-theme="system"] .empty-state,
+  :root[data-theme="system"] .tip-card,
+  :root[data-theme="system"] .focus-card,
+  :root[data-theme="system"] .date-chip,
+  :root[data-theme="system"] .secondary-btn,
+  :root[data-theme="system"] .icon-btn,
+  :root[data-theme="system"] .date-picker-side,
+  :root[data-theme="system"] .date-picker-day,
+  :root[data-theme="system"] .reminder-option{background-color:#1a1d27;color:var(--ink);border-color:var(--line)}
+  :root[data-theme="system"] .nav-item{color:#b4b8c8}
+  :root[data-theme="system"] .nav-item:hover,
+  :root[data-theme="system"] .nav-item.active{background:#2b2746;color:#bcb4ff}
+  :root[data-theme="system"] .focus-card{background:#211e35;border-color:#373052}
+  :root[data-theme="system"] .task-description,
+  :root[data-theme="system"] .settings-copy p,
+  :root[data-theme="system"] .page-heading p,
+  :root[data-theme="system"] .breadcrumbs,
+  :root[data-theme="system"] .muted,
+  :root[data-theme="system"] .stat-foot,
+  :root[data-theme="system"] .calendar-head p,
+  :root[data-theme="system"] .upcoming-item span,
+  :root[data-theme="system"] .focus-card p{color:var(--muted)}
+  :root[data-theme="system"] .nav-item small{background:#292d3c;color:#d3d6e2}
+  :root[data-theme="system"] .calendar-day{color:var(--ink)}
+  :root[data-theme="system"] .modal-backdrop{background:rgba(0,0,0,.72)}
+  :root[data-theme="system"] .settings-note{background:#202436;border-color:#353b50;color:#cbd2e8}
+  :root[data-theme="system"] .task-modal input,
+  :root[data-theme="system"] .task-modal textarea,
+  :root[data-theme="system"] .task-modal select{background:#11131a;color:var(--ink);border-color:var(--line)}
+  :root[data-theme="system"] .date-picker-side{background:#171a23}
+}
