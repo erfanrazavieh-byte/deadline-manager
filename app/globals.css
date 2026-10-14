@@ -652,7 +652,16 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   min-width: 0;
   overflow: hidden;
 }
+.date-picker-wrap .date-picker-days {
+  position: relative;
+  z-index: 2;
+  pointer-events: auto;
+}
 .date-picker-wrap .date-picker-day {
+  position: relative;
+  z-index: 3;
+  pointer-events: auto !important;
+  cursor: pointer;
   box-sizing: border-box;
   width: 100% !important;
   height: 34px !important;
