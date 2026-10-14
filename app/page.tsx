@@ -199,7 +199,7 @@ export default function Home() {
   const [authBusy, setAuthBusy] = useState(false);
 
   useEffect(() => {
-    const clock = window.setInterval(() => setClockNow(Date.now()), 60_000);
+    const clock = window.setInterval(() => setClockNow(Date.now()), 1_000);
     return () => window.clearInterval(clock);
   }, []);
 
