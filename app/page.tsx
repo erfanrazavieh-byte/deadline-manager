@@ -483,7 +483,7 @@ export default function Home() {
             <div className="settings-card">
               <div className="settings-row"><div className="settings-icon"><Bell size={20}/></div><div className="settings-copy"><strong>اعلان‌های مرورگر</strong><p>برای نمایش اعلان، اجازه مرورگر لازم است. این نسخه اعلان آزمایشی را پشتیبانی می‌کند.</p><span className={`permission ${permission==="granted"?"ok":""}`}>وضعیت: {permission==="granted"?"فعال":permission==="denied"?"مسدود شده":"نیازمند اجازه"}</span></div><button className="primary-btn compact" onClick={askNotifications}>{notifications?"بررسی مجدد":"فعال‌سازی"}</button></div>
               <div className="settings-row"><div className="settings-icon"><AlarmClock size={20}/></div><div className="settings-copy"><strong>آزمایش اعلان</strong><p>یک اعلان آزمایشی روی همین دستگاه نمایش بده.</p></div><button className="secondary-btn compact" onClick={testNotification}>ارسال آزمایشی</button></div>
-              <div className="settings-note"><CircleAlert size={17}/><span>یادآوری واقعی در زمان تعیین‌شده به بک‌اند، پایگاه داده و سرویس زمان‌بندی نیاز دارد. نسخه فعلی یک نمونه قابل اجرا با ذخیره‌سازی محلی است و اعلان زمان‌بندی‌شده در پس‌زمینه را تضمین نمی‌کند.</span></div>
+              
             </div>
           </div>
         ) : (
