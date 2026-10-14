@@ -67,13 +67,16 @@ const faDateTime = (value: string) => new Intl.DateTimeFormat("fa-IR-u-ca-persia
 }).format(new Date(value));
 const timeLeft = (value: string) => {
   const delta = new Date(value).getTime() - Date.now();
-  if (delta < 0) return "عقب‌افتاده";
-  const mins = Math.floor(delta / 60000);
-  const days = Math.floor(mins / 1440), hours = Math.floor((mins % 1440) / 60), minutes = mins % 60;
-  if (days) return `${days} روز و ${hours} ساعت باقی‌مانده`;
-  if (hours) return `${hours} ساعت و ${minutes} دقیقه باقی‌مانده`;
-  if (minutes) return `${minutes} دقیقه باقی‌مانده`;
-  return "کمتر از یک دقیقه";
+  const totalMinutes = Math.floor(Math.abs(delta) / 60000);
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  const minutes = totalMinutes % 60;
+  const parts: string[] = [];
+  if (days) parts.push(`${days.toLocaleString("fa-IR")} روز`);
+  if (hours) parts.push(`${hours.toLocaleString("fa-IR")} ساعت`);
+  if (minutes && days === 0) parts.push(`${minutes.toLocaleString("fa-IR")} دقیقه`);
+  if (!parts.length) parts.push("کمتر از یک دقیقه");
+  return delta < 0 ? `${parts.join(" و ")} تأخیر` : `${parts.join(" و ")} باقی‌مانده`;
 };
 const emptyForm = () => ({
   title: "", description: "", due: "", category: "دانشگاه" as Category,
@@ -83,6 +86,8 @@ const emptyForm = () => ({
 
 export default function Home() {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [clockNow, setClockNow] = useState(() => Date.now());
+  void clockNow;
   const [ready, setReady] = useState(false);
   const [activeNav, setActiveNav] = useState("همه کارها");
   const [query, setQuery] = useState("");
@@ -144,6 +149,11 @@ export default function Home() {
   const [authPassword, setAuthPassword] = useState("");
   const [authError, setAuthError] = useState("");
   const [authBusy, setAuthBusy] = useState(false);
+
+  useEffect(() => {
+    const clock = window.setInterval(() => setClockNow(Date.now()), 60_000);
+    return () => window.clearInterval(clock);
+  }, []);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("deadline-manager-theme");
