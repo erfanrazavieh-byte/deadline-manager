@@ -602,3 +602,31 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   :root[data-theme="system"] .reminder-option { background:#242836; border-color:#383d50; color:#c4c8d7; }
   :root[data-theme="system"] .reminder-option.selected { background:#302b50; border-color:#766bd5; color:#d2ccff; }
 }
+
+
+/* Stabilize Persian text and numerals in the custom Jalali picker on desktop browsers. */
+.date-picker-wrap .date-picker-popover,
+.date-picker-wrap .date-picker-popover button,
+.date-picker-wrap .date-picker-popover strong,
+.date-picker-wrap .date-picker-popover span,
+.date-picker-wrap .date-picker-popover label {
+  font-family: "Vazirmatn", Tahoma, Arial, sans-serif;
+  font-variant-numeric: normal;
+  font-feature-settings: "kern";
+}
+.date-picker-wrap .date-picker-month strong,
+.date-picker-wrap .date-picker-weekdays,
+.date-picker-wrap .date-picker-days,
+.date-picker-wrap .date-picker-side {
+  direction: rtl;
+  unicode-bidi: isolate;
+}
+.date-picker-wrap .date-picker-day,
+.date-picker-wrap .date-picker-trigger span {
+  unicode-bidi: plaintext;
+  font-variant-numeric: normal;
+}
+.date-picker-wrap .date-picker-day {
+  font-family: Tahoma, "Vazirmatn", Arial, sans-serif !important;
+  font-weight: 500;
+}
