@@ -62,7 +62,7 @@ const timeLeft = (value: string) => {
 const emptyForm = () => ({
   title: "", description: "", due: "", category: "دانشگاه" as Category,
   priority: "medium" as Priority, status: "todo" as Status,
-  reminderMins: ["1440"] as string[]
+  reminderMins: ["5"] as string[]
 });
 
 export default function Home() {
@@ -170,50 +170,50 @@ export default function Home() {
   useEffect(() => {
     if (!user?.id || !notifications || permission !== "granted" || !("Notification" in window)) return;
     let cancelled = false;
+    let checking = false;
     let interval: number | undefined;
 
     const checkReminders = async () => {
-      if (document.visibilityState === "hidden") return;
+      if (cancelled || checking || document.visibilityState !== "visible") return;
+      checking = true;
       try {
         const registration = await getNotificationRegistration();
         if (cancelled) return;
         const now = Date.now();
         for (const task of tasks) {
+          if (cancelled) break;
           if (task.status === "done") continue;
           for (const reminder of task.reminders || []) {
+            if (cancelled) break;
             const key = `deadline-manager-sent-${user.id}-${task.id}-${reminder.id}`;
             if (localStorage.getItem(key) === "true") continue;
             const reminderTime = new Date(reminder.at).getTime();
-            if (!Number.isFinite(reminderTime)) {
-              localStorage.setItem(key, "true");
-              continue;
-            }
-            // Ignore reminders that were missed by more than 2 minutes while the app was closed.
-            if (reminderTime < now - 2 * 60 * 1000) {
+            if (!Number.isFinite(reminderTime)) continue;
+            // Send due reminders when the page is open, including reminders up to 24 hours late.
+            // Older reminders are marked handled to avoid a burst of stale notifications.
+            if (reminderTime < now - 24 * 60 * 60 * 1000) {
               localStorage.setItem(key, "true");
               continue;
             }
             if (reminderTime <= now) {
-              try {
-                await registration.showNotification("یادآوری ددلاین", {
-                  body: task.title,
-                  tag: `deadline-${task.id}-${reminder.id}`,
-                  data: { url: "/" }
-                });
-                localStorage.setItem(key, "true");
-              } catch (error) {
-                setToast("ارسال یادآوری ناموفق بود. اجازه اعلان مرورگر را بررسی کن.");
-              }
+              await registration.showNotification("یادآوری ددلاین", {
+                body: task.title,
+                tag: `deadline-${task.id}-${reminder.id}`,
+                data: { url: "/" }
+              });
+              localStorage.setItem(key, "true");
             }
           }
         }
-      } catch {
-        // Keep reminders pending if the service worker is not available yet.
+      } catch (error) {
+        setToast("بررسی یادآوری‌ها ناموفق بود: " + (error instanceof Error ? error.message : "خطای اعلان"));
+      } finally {
+        checking = false;
       }
     };
 
     void checkReminders();
-    interval = window.setInterval(() => { void checkReminders(); }, 15000);
+    interval = window.setInterval(() => { void checkReminders(); }, 5000);
     const onVisibilityChange = () => { if (document.visibilityState === "visible") void checkReminders(); };
     document.addEventListener("visibilitychange", onVisibilityChange);
     return () => {
@@ -254,7 +254,7 @@ export default function Home() {
     const due = now.format("YYYY-MM-DDTHH:mm");
     setEditing(null); setForm({ ...emptyForm(), due }); prepareJalaliFields(due); setModalOpen(true);
   };
-  const reminderChoices = [{v:"10080",l:"۱ هفته قبل"},{v:"4320",l:"۳ روز قبل"},{v:"1440",l:"۱ روز قبل"},{v:"180",l:"۳ ساعت قبل"},{v:"30",l:"۳۰ دقیقه قبل"}];
+  const reminderChoices = [{v:"10080",l:"۱ هفته قبل"},{v:"4320",l:"۳ روز قبل"},{v:"1440",l:"۱ روز قبل"},{v:"180",l:"۳ ساعت قبل"},{v:"30",l:"۳۰ دقیقه قبل"},{v:"5",l:"۵ دقیقه قبل"},{v:"1",l:"۱ دقیقه قبل"}];
   const openEdit = (task: Task) => {
     const offsets = (task.reminders || []).map(r => Math.round((new Date(task.due).getTime() - new Date(r.at).getTime()) / 60000));
     const reminderMins = reminderChoices
