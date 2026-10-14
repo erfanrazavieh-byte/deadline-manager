@@ -588,3 +588,17 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   }
   :root[data-theme="system"] .reminder-label span{color:#a0a8bf!important}
 }
+
+
+/* Dark theme: keep suggested reminder chips readable without bright white blocks. */
+:root[data-theme="dark"] .reminder-field,
+:root[data-theme="system"] .reminder-field { background:#1b1e29; border-color:#343849; }
+:root[data-theme="dark"] .reminder-option,
+:root[data-theme="system"] .reminder-option { background:#242836; border-color:#383d50; color:#c4c8d7; }
+:root[data-theme="dark"] .reminder-option.selected,
+:root[data-theme="system"] .reminder-option.selected { background:#302b50; border-color:#766bd5; color:#d2ccff; }
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="system"] .reminder-field { background:#1b1e29; border-color:#343849; }
+  :root[data-theme="system"] .reminder-option { background:#242836; border-color:#383d50; color:#c4c8d7; }
+  :root[data-theme="system"] .reminder-option.selected { background:#302b50; border-color:#766bd5; color:#d2ccff; }
+}
