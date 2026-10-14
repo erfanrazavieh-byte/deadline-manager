@@ -233,7 +233,7 @@ export default function Home() {
       const existing = tasks.find(t => t.id === editing);
       if (!existing) return;
       const now = Date.now();
-      const reminders = form.reminderMins.map((m,i) => ({ id: `${now}-r${i}`, at: new Date(new Date(form.due).getTime()-Number(m)*60000).toISOString().slice(0,16) }));
+      const reminders = form.reminderMins.map((m,i) => ({ id: `${now}-r${i}`, at: new Date(new Date(form.due).getTime()-Number(m)*60000).toISOString() }));
       const updated: Task = { ...existing, title: form.title.trim(), description: form.description, due: form.due, category: form.category, priority: form.priority, status: form.status, reminders };
       const { error } = await supabase.from("tasks").update({
         title: updated.title, description: updated.description, due: updated.due,
@@ -244,7 +244,7 @@ export default function Home() {
       setToast("تغییرات ذخیره شد.");
     } else {
       const now = Date.now();
-      const reminders = form.reminderMins.map((m,i) => ({ id: `${now}-r${i}`, at: new Date(new Date(form.due).getTime()-Number(m)*60000).toISOString().slice(0,16) }));
+      const reminders = form.reminderMins.map((m,i) => ({ id: `${now}-r${i}`, at: new Date(new Date(form.due).getTime()-Number(m)*60000).toISOString() }));
       const created: Task = { id: `${now}`, title: form.title.trim(), description: form.description, due: form.due, category: form.category, priority: form.priority, status: form.status, reminders, createdAt: new Date().toISOString() };
       const { error } = await supabase.from("tasks").insert({
         id: created.id, user_id: user.id, title: created.title, description: created.description,
