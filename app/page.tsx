@@ -1,12 +1,35 @@
  "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/lib/supabase";
 import {
   AlarmClock, ArrowDownWideNarrow, Bell, CalendarDays, Check, CheckCheck,
   ChevronDown, Circle, Clock3, LayoutDashboard, ListTodo, MoreHorizontal,
   Plus, Search, Settings2, SlidersHorizontal, Trash2, X, Pencil, ChevronLeft,
   ChevronRight, CalendarClock, CircleAlert, Sparkles, Menu, CheckCircle2
 } from "lucide-react";
+
+// تبدیل تاریخ شمسی انتخاب‌شده به رشته میلادی قابل ذخیره در دیتابیس
+const momentJalaali: any = require("moment-jalaali");
+const jalaliMonths = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
+const jalaliDaysInMonth = (year: string | number, month: string | number) => {
+  const m = Number(month);
+  if (m >= 1 && m <= 6) return 31;
+  if (m >= 7 && m <= 11) return 30;
+  if (m === 12) {
+    const start = momentJalaali(`${year}/12/1`, "jYYYY/jM/jD");
+    const nextYear = momentJalaali(`${Number(year) + 1}/1/1`, "jYYYY/jM/jD");
+    return nextYear.diff(start, "days");
+  }
+  return 31;
+};
+const toLocalInputDate = (value: any) => momentJalaali(value).format("YYYY-MM-DDTHH:mm");
+const toJalaliParts = (value: string) => {
+  const m = momentJalaali(value);
+  return { year: String(m.jYear()), month: String(m.jMonth() + 1), day: String(m.jDate()), time: m.format("HH:mm") };
+};
+const fromJalaliParts = (year: string, month: string, day: string, time: string) =>
+  momentJalaali(`${year}/${month}/${day} ${time || "23:59"}`, "jYYYY/jM/jD HH:mm").format("YYYY-MM-DDTHH:mm");
 
 type Status = "todo" | "doing" | "done";
 type Priority = "low" | "medium" | "high";
@@ -19,13 +42,7 @@ type Task = {
 };
 
 const categories: Category[] = ["دانشگاه", "کار", "پروژه شخصی", "زندگی"];
-const initialTasks: Task[] = [
-  { id: "a1", title: "تحویل گزارش تحلیل سیستم", description: "بازبینی نهایی و آماده‌سازی فایل ارائه", due: "2026-10-14T16:00", category: "دانشگاه", priority: "high", status: "doing", reminders: [{ id: "r1", at: "2026-10-14T13:00" }], createdAt: "2026-10-12T10:00" },
-  { id: "a2", title: "مطالعه کنترل موجودی", description: "مرور EOQ و حل تمرین‌های فصل دوم", due: "2026-10-15T20:30", category: "دانشگاه", priority: "medium", status: "todo", reminders: [], createdAt: "2026-10-12T10:10" },
-  { id: "a3", title: "تکمیل نسخه اولیه وب‌اپ", description: "بررسی تجربه کاربری و حالت موبایل", due: "2026-10-17T18:00", category: "پروژه شخصی", priority: "high", status: "todo", reminders: [{ id: "r2", at: "2026-10-16T18:00" }], createdAt: "2026-10-12T10:15" },
-  { id: "a4", title: "ارسال فایل کارآموزی", description: "جمع‌بندی ماژول خرید و انبار", due: "2026-10-13T12:00", category: "کار", priority: "low", status: "todo", reminders: [], createdAt: "2026-10-11T12:00" },
-  { id: "a5", title: "مرتب‌کردن یادداشت‌ها", description: "", due: "2026-10-19T10:00", category: "زندگی", priority: "low", status: "done", reminders: [], createdAt: "2026-10-10T09:00" },
-];
+
 
 const faDate = (date: Date, opts: Intl.DateTimeFormatOptions = {}) =>
   new Intl.DateTimeFormat("fa-IR-u-ca-persian", { day: "numeric", month: "short", ...opts }).format(date);
@@ -58,27 +75,67 @@ export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm());
+  const [jalaliYear, setJalaliYear] = useState(String(momentJalaali().jYear()));
+  const [jalaliMonth, setJalaliMonth] = useState(String(momentJalaali().jMonth() + 1));
+  const [jalaliDay, setJalaliDay] = useState(String(momentJalaali().jDate()));
+  const [deadlineTime, setDeadlineTime] = useState(momentJalaali().format("HH:mm"));
+  const syncJalaliDate = (year: string, month: string, day: string, time: string) => {
+    const maxDay = jalaliDaysInMonth(year, month);
+    const safeDay = String(Math.min(Number(day), maxDay));
+    setJalaliYear(year); setJalaliMonth(month); setJalaliDay(safeDay); setDeadlineTime(time);
+    const converted = fromJalaliParts(year, month, safeDay, time);
+    if (momentJalaali(converted, "YYYY-MM-DDTHH:mm", true).isValid()) setForm(old => ({ ...old, due: converted }));
+  };
+  const prepareJalaliFields = (value?: string) => {
+    const m = value ? momentJalaali(value) : momentJalaali();
+    setJalaliYear(String(m.jYear())); setJalaliMonth(String(m.jMonth() + 1)); setJalaliDay(String(m.jDate())); setDeadlineTime(m.format("HH:mm"));
+  };
   const [showSettings, setShowSettings] = useState(false);
   const [notifications, setNotifications] = useState(false);
   const [permission, setPermission] = useState("default");
   const [toast, setToast] = useState("");
   const [mobileMenu, setMobileMenu] = useState(false);
-  const [calendarMonth, setCalendarMonth] = useState(new Date(2026, 9, 1));
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [authBusy, setAuthBusy] = useState(false);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("deadline-manager-tasks-v1");
-      setTasks(stored ? JSON.parse(stored) : initialTasks);
-      setNotifications(localStorage.getItem("deadline-manager-notifications") === "true");
-      if ("Notification" in window) setPermission(Notification.permission);
-    } catch { setTasks(initialTasks); }
-    setReady(true);
+    setNotifications(localStorage.getItem("deadline-manager-notifications") === "true");
+    if ("Notification" in window) setPermission(Notification.permission);
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (error) setAuthError("برقراری ارتباط با حساب کاربری ممکن نشد.");
+      setUser(data.session?.user ? { id: data.session.user.id, email: data.session.user.email } : null);
+      setAuthLoading(false);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ? { id: session.user.id, email: session.user.email } : null);
+      setAuthLoading(false);
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
-    if (!ready) return;
-    localStorage.setItem("deadline-manager-tasks-v1", JSON.stringify(tasks));
-  }, [tasks, ready]);
+    if (!user) { setTasks([]); setReady(true); return; }
+    let cancelled = false;
+    setReady(false);
+    supabase.from("tasks").select("*").eq("user_id", user.id).order("due", { ascending: true })
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error) setToast("بارگذاری ددلاین‌ها ناموفق بود: " + error.message);
+        else setTasks((data || []).map((row: any) => ({
+          id: row.id, title: row.title, description: row.description || "", due: row.due,
+          category: row.category, priority: row.priority, status: row.status,
+          reminders: row.reminders || [], createdAt: row.created_at
+        })));
+        setReady(true);
+      });
+    return () => { cancelled = true; };
+  }, [user?.id]);
 
   useEffect(() => {
     if (!toast) return;
@@ -112,33 +169,83 @@ export default function Home() {
     });
   }, [tasks, activeNav, categoryFilter, statusFilter, query]);
 
-  const openNew = () => { setEditing(null); setForm(emptyForm()); setModalOpen(true); };
+  const openNew = () => {
+    const now = momentJalaali();
+    const due = now.format("YYYY-MM-DDTHH:mm");
+    setEditing(null); setForm({ ...emptyForm(), due }); prepareJalaliFields(due); setModalOpen(true);
+  };
   const openEdit = (task: Task) => {
     setEditing(task.id);
     setForm({ title: task.title, description: task.description, due: task.due, category: task.category, priority: task.priority, status: task.status, reminderMins: [] });
+    prepareJalaliFields(task.due);
     setModalOpen(true);
   };
-  const saveTask = (e: React.FormEvent) => {
+  const saveTask = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) { setToast("ابتدا وارد حساب کاربری شو."); return; }
     if (!form.title.trim() || !form.due) { setToast("عنوان و زمان ددلاین را وارد کن."); return; }
     if (new Date(form.due).getTime() <= 0) { setToast("زمان ددلاین معتبر نیست."); return; }
+    if (!ready) { setToast("لطفاً تا پایان بارگذاری صبر کن."); return; }
     if (editing) {
-      setTasks(old => old.map(t => t.id === editing ? { ...t, title: form.title.trim(), description: form.description, due: form.due, category: form.category, priority: form.priority, status: form.status } : t));
+      const existing = tasks.find(t => t.id === editing);
+      if (!existing) return;
+      const updated: Task = { ...existing, title: form.title.trim(), description: form.description, due: form.due, category: form.category, priority: form.priority, status: form.status };
+      const { error } = await supabase.from("tasks").update({
+        title: updated.title, description: updated.description, due: updated.due,
+        category: updated.category, priority: updated.priority, status: updated.status
+      }).eq("id", editing).eq("user_id", user.id);
+      if (error) { setToast("ذخیره تغییرات ناموفق بود: " + error.message); return; }
+      setTasks(old => old.map(t => t.id === editing ? updated : t));
       setToast("تغییرات ذخیره شد.");
     } else {
       const now = Date.now();
       const reminders = form.reminderMins.map((m,i) => ({ id: `${now}-r${i}`, at: new Date(new Date(form.due).getTime()-Number(m)*60000).toISOString().slice(0,16) }));
-      setTasks(old => [...old, { id: `${now}`, title: form.title.trim(), description: form.description, due: form.due, category: form.category, priority: form.priority, status: form.status, reminders, createdAt: new Date().toISOString() }]);
+      const created: Task = { id: `${now}`, title: form.title.trim(), description: form.description, due: form.due, category: form.category, priority: form.priority, status: form.status, reminders, createdAt: new Date().toISOString() };
+      const { error } = await supabase.from("tasks").insert({
+        id: created.id, user_id: user.id, title: created.title, description: created.description,
+        due: created.due, category: created.category, priority: created.priority, status: created.status,
+        reminders: created.reminders, created_at: created.createdAt
+      });
+      if (error) { setToast("ثبت کار ناموفق بود: " + error.message); return; }
+      setTasks(old => [...old, created]);
       setToast("کار جدید اضافه شد.");
     }
     setModalOpen(false);
   };
-  const deleteTask = (task: Task) => {
-    if (!window.confirm(`کار «${task.title}» حذف شود؟`)) return;
+  const deleteTask = async (task: Task) => {
+    if (!user || !window.confirm(`کار «${task.title}» حذف شود؟`)) return;
+    const { error } = await supabase.from("tasks").delete().eq("id", task.id).eq("user_id", user.id);
+    if (error) { setToast("حذف کار ناموفق بود: " + error.message); return; }
     setTasks(old => old.filter(t => t.id !== task.id));
     setToast("کار حذف شد.");
   };
-  const toggleDone = (task: Task) => setTasks(old => old.map(t => t.id === task.id ? { ...t, status: t.status === "done" ? "todo" : "done" } : t));
+  const toggleDone = async (task: Task) => {
+    if (!user) return;
+    const status = task.status === "done" ? "todo" : "done";
+    const { error } = await supabase.from("tasks").update({ status }).eq("id", task.id).eq("user_id", user.id);
+    if (error) { setToast("تغییر وضعیت ناموفق بود: " + error.message); return; }
+    setTasks(old => old.map(t => t.id === task.id ? { ...t, status } : t));
+  };
+  const submitAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError(""); setAuthBusy(true);
+    try {
+      if (authMode === "signup") {
+        const { data, error } = await supabase.auth.signUp({ email: authEmail.trim(), password: authPassword });
+        if (error) throw error;
+        if (!data.session) setAuthError("حساب ساخته شد. ایمیلت را برای تأیید بررسی کن؛ بعد وارد شو.");
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email: authEmail.trim(), password: authPassword });
+        if (error) throw error;
+      }
+    } catch (error: any) {
+      setAuthError(error?.message || "ورود یا ثبت‌نام انجام نشد.");
+    } finally { setAuthBusy(false); }
+  };
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) setToast("خروج انجام نشد: " + error.message);
+  };
   const askNotifications = async () => {
     if (!("Notification" in window)) { setToast("این مرورگر از اعلان‌های وب پشتیبانی نمی‌کند."); return; }
     const result = await Notification.requestPermission();
@@ -170,6 +277,23 @@ export default function Home() {
     return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
   }));
 
+  if (authLoading) return <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#f7f8fc", color: "#25283b", fontFamily: "inherit" }}><p>در حال بررسی حساب کاربری…</p></main>;
+
+  if (!user) return (
+    <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 20, background: "#f7f8fc", color: "#25283b", fontFamily: "inherit" }} dir="rtl">
+      <form onSubmit={submitAuth} style={{ width: "100%", maxWidth: 420, background: "white", border: "1px solid #e7e9f1", borderRadius: 20, padding: 28, boxShadow: "0 18px 60px rgba(30,40,80,.08)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}><div style={{ width: 48, height: 48, display: "grid", placeItems: "center", background: "#ecebff", color: "#5d54c6", borderRadius: 14, fontSize: 24 }}>◷</div><div><h1 style={{ margin: 0, fontSize: 26 }}>ددلاین</h1><p style={{ margin: "4px 0 0", color: "#73778b" }}>مدیریت زمان، ساده‌تر</p></div></div>
+        <h2 style={{ fontSize: 20, margin: "0 0 8px" }}>{authMode === "signin" ? "ورود به حساب" : "ساخت حساب کاربری"}</h2>
+        <p style={{ color: "#73778b", lineHeight: 1.8, margin: "0 0 20px" }}>ددلاین‌هایت در حساب شخصی‌ات ذخیره می‌شوند و از دستگاه‌های مختلف در دسترس‌اند.</p>
+        <label style={{ display: "block", marginBottom: 14, fontSize: 14 }}>ایمیل<input type="email" autoComplete="email" required value={authEmail} onChange={e => setAuthEmail(e.target.value)} placeholder="name@example.com" style={{ display: "block", width: "100%", boxSizing: "border-box", marginTop: 8, padding: "12px 14px", border: "1px solid #dfe2ed", borderRadius: 10, font: "inherit", direction: "ltr" }} /></label>
+        <label style={{ display: "block", marginBottom: 14, fontSize: 14 }}>رمز عبور<input type="password" autoComplete={authMode === "signin" ? "current-password" : "new-password"} minLength={6} required value={authPassword} onChange={e => setAuthPassword(e.target.value)} placeholder="حداقل ۶ نویسه" style={{ display: "block", width: "100%", boxSizing: "border-box", marginTop: 8, padding: "12px 14px", border: "1px solid #dfe2ed", borderRadius: 10, font: "inherit" }} /></label>
+        {authError && <p role="alert" style={{ background: "#fff0f0", color: "#a82d36", padding: 12, borderRadius: 10, fontSize: 13, lineHeight: 1.7 }}>{authError}</p>}
+        <button type="submit" disabled={authBusy} style={{ width: "100%", padding: 13, border: 0, borderRadius: 10, background: "#6258d5", color: "white", font: "inherit", fontWeight: 700, cursor: "pointer", marginTop: 8 }}>{authBusy ? "لطفاً صبر کن…" : authMode === "signin" ? "ورود" : "ثبت‌نام"}</button>
+        <button type="button" onClick={() => { setAuthMode(authMode === "signin" ? "signup" : "signin"); setAuthError(""); }} style={{ width: "100%", marginTop: 14, padding: 10, border: 0, background: "transparent", color: "#5d54c6", font: "inherit", cursor: "pointer" }}>{authMode === "signin" ? "حساب نداری؟ ثبت‌نام کن" : "قبلاً حساب ساخته‌ای؟ وارد شو"}</button>
+      </form>
+    </main>
+  );
+
   return (
     <main className="app-shell">
       <aside className={`sidebar ${mobileMenu ? "sidebar-open" : ""}`}>
@@ -187,7 +311,7 @@ export default function Home() {
         <div className="sidebar-bottom">
           <div className="focus-card"><div className="focus-icon"><Sparkles size={17}/></div><strong>قدم‌به‌قدم جلو برو</strong><p>کارهای بزرگ با انجام کارهای کوچک تمام می‌شوند.</p></div>
           <button className={`nav-item ${showSettings?"active":""}`} onClick={()=>{setShowSettings(!showSettings);setMobileMenu(false);}}><Settings2 size={18}/><span>تنظیمات</span></button>
-          <div className="profile-row"><div className="avatar">ا</div><div className="profile-text"><strong>فضای شخصی</strong><span>حساب محلی</span></div><MoreHorizontal size={19} className="muted"/></div>
+          <div className="profile-row"><div className="avatar">ا</div><div className="profile-text"><strong>فضای شخصی</strong><span>{user.email || "حساب کاربری"}</span></div><MoreHorizontal size={19} className="muted"/></div>
         </div>
       </aside>
 
@@ -197,7 +321,7 @@ export default function Home() {
           <button className="icon-btn menu-trigger" onClick={()=>setMobileMenu(true)} aria-label="منو"><Menu size={20}/></button>
           <div className="breadcrumbs">فضای کاری <ChevronLeft size={14}/> <strong>{showSettings?"تنظیمات":activeNav}</strong></div>
           <div className="top-actions">
-            <div className="date-chip"><CalendarDays size={15}/>{faDate(new Date(), { weekday:"long", year:"numeric" })}</div>
+            <div className="date-chip"><CalendarDays size={15}/>{faDate(new Date(), { weekday:"long", year:"numeric" })}</div><button className="secondary-btn compact" onClick={signOut} title={user.email || "خروج از حساب"}>خروج</button>
             <button className={`icon-btn notification-btn ${notifications?"notification-on":""}`} onClick={()=>setShowSettings(!showSettings)} aria-label="تنظیمات اعلان"><Bell size={18}/><i/></button>
           </div>
         </header>
@@ -282,7 +406,7 @@ export default function Home() {
         <div className="modal-head"><div><h2>{editing?"ویرایش کار":"ایجاد کار جدید"}</h2><p>جزئیات کار و زمان تحویل را مشخص کن.</p></div><button type="button" className="icon-btn" onClick={()=>setModalOpen(false)} aria-label="بستن"><X size={19}/></button></div>
         <label className="field-label">عنوان کار <b>*</b><input autoFocus value={form.title} onChange={e=>setForm({...form,title:e.target.value})} placeholder="مثلاً تحویل پروژه دانشگاه" required maxLength={120}/></label>
         <label className="field-label">توضیحات <span>اختیاری</span><textarea value={form.description} onChange={e=>setForm({...form,description:e.target.value})} placeholder="جزئیات یا یادداشت کوتاه..." rows={3} maxLength={1000}/></label>
-        <div className="form-two"><label className="field-label">تاریخ و ساعت ددلاین <b>*</b><input type="datetime-local" value={form.due} onChange={e=>setForm({...form,due:e.target.value})} required/></label><label className="field-label">دسته‌بندی<select value={form.category} onChange={e=>setForm({...form,category:e.target.value as Category})}>{categories.map(c=><option key={c}>{c}</option>)}</select></label></div>
+        <div className="form-two"><div className="field-label"><span>تاریخ شمسی ددلاین <b>*</b></span><div className="form-two" style={{ gap: 8, marginTop: 8 }}><select aria-label="روز شمسی" value={jalaliDay} onChange={e=>syncJalaliDate(jalaliYear,jalaliMonth,e.target.value,deadlineTime)} required>{Array.from({ length: jalaliDaysInMonth(jalaliYear, jalaliMonth) }, (_,i)=>String(i+1)).map(d=><option key={d} value={d}>{new Intl.NumberFormat("fa-IR").format(Number(d))}</option>)}</select><select aria-label="ماه شمسی" value={jalaliMonth} onChange={e=>syncJalaliDate(jalaliYear,e.target.value,jalaliDay,deadlineTime)}>{jalaliMonths.map((m,i)=><option key={m} value={String(i+1)}>{m}</option>)}</select><select aria-label="سال شمسی" value={jalaliYear} onChange={e=>syncJalaliDate(e.target.value,jalaliMonth,jalaliDay,deadlineTime)}>{Array.from({length: 11},(_,i)=>momentJalaali().jYear()-5+i).map(y=><option key={y} value={String(y)}>{new Intl.NumberFormat("fa-IR").format(y)}</option>)}</select></div><label style={{display:"block",marginTop:10}}>ساعت ددلاین<input type="time" value={deadlineTime} onChange={e=>syncJalaliDate(jalaliYear,jalaliMonth,jalaliDay,e.target.value)} required/></label></div><label className="field-label">دسته‌بندی<select value={form.category} onChange={e=>setForm({...form,category:e.target.value as Category})}>{categories.map(c=><option key={c}>{c}</option>)}</select></label></div>
         <div className="form-two"><label className="field-label">اولویت<select value={form.priority} onChange={e=>setForm({...form,priority:e.target.value as Priority})}><option value="low">کم</option><option value="medium">متوسط</option><option value="high">زیاد</option></select></label><label className="field-label">وضعیت<select value={form.status} onChange={e=>setForm({...form,status:e.target.value as Status})}><option value="todo">انجام‌نشده</option><option value="doing">در حال انجام</option><option value="done">انجام‌شده</option></select></label></div>
         {!editing&&<div className="reminder-field"><div className="reminder-label"><Bell size={15}/> یادآورهای پیشنهادی <span>زمان‌ها نسبت به ددلاین محاسبه می‌شوند</span></div><div className="reminder-options">{[{v:"10080",l:"۱ هفته قبل"},{v:"4320",l:"۳ روز قبل"},{v:"1440",l:"۱ روز قبل"},{v:"180",l:"۳ ساعت قبل"},{v:"30",l:"۳۰ دقیقه قبل"}].map(r=><label key={r.v} className={`reminder-option ${form.reminderMins.includes(r.v)?"selected":""}`}><input type="checkbox" checked={form.reminderMins.includes(r.v)} onChange={e=>setForm({...form,reminderMins:e.target.checked?[...form.reminderMins,r.v]:form.reminderMins.filter(v=>v!==r.v)})}/>{r.l}</label>)}</div></div>}
         <div className="modal-actions"><button type="button" className="secondary-btn" onClick={()=>setModalOpen(false)}>انصراف</button><button type="submit" className="primary-btn"><Check size={17}/>{editing?"ذخیره تغییرات":"ثبت کار"}</button></div>
