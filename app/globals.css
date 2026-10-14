@@ -430,3 +430,70 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   :root[data-theme="system"] .task-modal select{background:#11131a;color:var(--ink);border-color:var(--line)}
   :root[data-theme="system"] .date-picker-side{background:#171a23}
 }
+
+
+/* Dark-mode contrast fixes for cards and controls. */
+:root[data-theme="dark"] .tasks-section,
+:root[data-theme="dark"] .calendar-card,
+:root[data-theme="dark"] .upcoming-card,
+:root[data-theme="dark"] .settings-card,
+:root[data-theme="dark"] .stat-card,
+:root[data-theme="dark"] .task-modal,
+:root[data-theme="dark"] .date-picker-popover,
+:root[data-theme="dark"] .date-picker-wrap .date-picker-popover{
+  background:#171b26!important;color:#edf0fa;border-color:#2d3548;
+}
+:root[data-theme="dark"] .search-box,
+:root[data-theme="dark"] .filter-wrap,
+:root[data-theme="dark"] .task-row{
+  background:#111620;color:#edf0fa;border-color:#2d3548;
+}
+:root[data-theme="dark"] .section-heading>div span{background:#242a3a;color:#b6bfd4}
+:root[data-theme="dark"] .filter-wrap select{color:#d6dced}
+:root[data-theme="dark"] .task-check{background:#252b3a;border-color:#68738b}
+:root[data-theme="dark"] .task-check.checked{background:#51b990;border-color:#51b990}
+:root[data-theme="dark"] .cat-study{background:#302b50;color:#c2baff}
+:root[data-theme="dark"] .cat-work{background:#1f344b;color:#a5d3ff}
+:root[data-theme="dark"] .cat-project{background:#453426;color:#ffd0a0}
+:root[data-theme="dark"] .cat-life{background:#1e3c32;color:#a8e9ce}
+:root[data-theme="dark"] .priority-high,
+:root[data-theme="dark"] .late-pill{background:#482a34;color:#ffb5be}
+:root[data-theme="dark"] .priority-medium{background:#443a24;color:#f3d18a}
+:root[data-theme="dark"] .priority-low{background:#20392f;color:#a8e9ce}
+:root[data-theme="dark"] .mobile-bottom{background:#171b26!important;border-color:#2d3548}
+:root[data-theme="dark"] .mobile-bottom button{color:#aab3c8}
+:root[data-theme="dark"] .mobile-bottom button.selected,
+:root[data-theme="dark"] .mobile-bottom button:nth-child(3){color:#a99dff}
+:root[data-theme="dark"] .date-picker-wrap .date-picker-popover{background:#171b26!important}
+:root[data-theme="dark"] .date-picker-wrap .date-picker-day{color:#dce2f1}
+@media(prefers-color-scheme:dark){
+  :root[data-theme="system"] .tasks-section,
+  :root[data-theme="system"] .calendar-card,
+  :root[data-theme="system"] .upcoming-card,
+  :root[data-theme="system"] .settings-card,
+  :root[data-theme="system"] .stat-card,
+  :root[data-theme="system"] .task-modal,
+  :root[data-theme="system"] .date-picker-popover,
+  :root[data-theme="system"] .date-picker-wrap .date-picker-popover{
+    background:#171b26!important;color:#edf0fa;border-color:#2d3548;
+  }
+  :root[data-theme="system"] .search-box,
+  :root[data-theme="system"] .filter-wrap,
+  :root[data-theme="system"] .task-row{background:#111620;color:#edf0fa;border-color:#2d3548}
+  :root[data-theme="system"] .section-heading>div span{background:#242a3a;color:#b6bfd4}
+  :root[data-theme="system"] .filter-wrap select{color:#d6dced}
+  :root[data-theme="system"] .task-check{background:#252b3a;border-color:#68738b}
+  :root[data-theme="system"] .cat-study{background:#302b50;color:#c2baff}
+  :root[data-theme="system"] .cat-work{background:#1f344b;color:#a5d3ff}
+  :root[data-theme="system"] .cat-project{background:#453426;color:#ffd0a0}
+  :root[data-theme="system"] .cat-life{background:#1e3c32;color:#a8e9ce}
+  :root[data-theme="system"] .priority-high,
+  :root[data-theme="system"] .late-pill{background:#482a34;color:#ffb5be}
+  :root[data-theme="system"] .priority-medium{background:#443a24;color:#f3d18a}
+  :root[data-theme="system"] .priority-low{background:#20392f;color:#a8e9ce}
+  :root[data-theme="system"] .mobile-bottom{background:#171b26!important;border-color:#2d3548}
+  :root[data-theme="system"] .mobile-bottom button{color:#aab3c8}
+  :root[data-theme="system"] .mobile-bottom button.selected,
+  :root[data-theme="system"] .mobile-bottom button:nth-child(3){color:#a99dff}
+  :root[data-theme="system"] .date-picker-wrap .date-picker-day{color:#dce2f1}
+}
