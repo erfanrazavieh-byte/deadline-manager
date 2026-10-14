@@ -315,19 +315,48 @@ export default function Home() {
     const { error } = await supabase.auth.signOut();
     if (error) setToast("خروج انجام نشد: " + error.message);
   };
+  const getNotificationRegistration = async () => {
+    if (!("serviceWorker" in navigator)) throw new Error("این مرورگر از Service Worker پشتیبانی نمی‌کند.");
+    if (!window.isSecureContext) throw new Error("اعلان‌ها فقط در اتصال امن HTTPS قابل استفاده‌اند.");
+    const registration = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+    await navigator.serviceWorker.ready;
+    return registration;
+  };
+
   const askNotifications = async () => {
     if (!("Notification" in window)) { setToast("این مرورگر از اعلان‌های وب پشتیبانی نمی‌کند."); return; }
-    const result = await Notification.requestPermission();
-    setPermission(result);
-    const enabled = result === "granted";
-    setNotifications(enabled);
-    localStorage.setItem("deadline-manager-notifications", String(enabled));
-    setToast(enabled ? "اجازه اعلان مرورگر فعال شد." : "اجازه اعلان داده نشد.");
+    try {
+      const result = await Notification.requestPermission();
+      setPermission(result);
+      const enabled = result === "granted";
+      setNotifications(enabled);
+      localStorage.setItem("deadline-manager-notifications", String(enabled));
+      if (!enabled) { setToast("اجازه اعلان داده نشد؛ مجوز اعلان سایت را در تنظیمات مرورگر بررسی کن."); return; }
+      await getNotificationRegistration();
+      setToast("اعلان فعال شد. حالا «ارسال آزمایشی» را بزن.");
+    } catch (error) {
+      setToast("فعال‌سازی اعلان ناموفق بود: " + (error instanceof Error ? error.message : "خطای ناشناخته"));
+    }
   };
-  const testNotification = () => {
-    if (!("Notification" in window) || Notification.permission !== "granted") { setToast("ابتدا اجازه اعلان را فعال کن."); return; }
-    new Notification("ددلاین | اعلان آزمایشی", { body: "اعلان‌های مرورگر روی این دستگاه فعال هستند." });
-    setToast("اعلان آزمایشی ارسال شد.");
+
+  const testNotification = async () => {
+    if (!("Notification" in window) || Notification.permission !== "granted") {
+      setToast("ابتدا «فعال‌سازی» را بزن و اجازه اعلان را بده.");
+      return;
+    }
+    try {
+      const registration = await getNotificationRegistration();
+      await registration.showNotification("ددلاین | اعلان آزمایشی", {
+        body: "اعلان‌های این دستگاه فعال هستند.",
+        icon: "/icon-192.png",
+        badge: "/icon-192.png",
+        tag: "deadline-manager-test",
+        data: { url: "/" }
+      });
+      setToast("درخواست اعلان آزمایشی ارسال شد؛ نوار اعلان و تنظیمات گوشی را بررسی کن.");
+    } catch (error) {
+      setToast("ارسال اعلان ناموفق بود: " + (error instanceof Error ? error.message : "خطای ناشناخته"));
+    }
   };
 
   const navItems = [
