@@ -318,7 +318,7 @@ export default function Home() {
     setAuthError(""); setAuthBusy(true);
     try {
       if (authMode === "signup") {
-        const { data, error } = await supabase.auth.signUp({ email: authEmail.trim(), password: authPassword });
+        const { data, error } = await supabase.auth.signUp({ email: authEmail.trim(), password: authPassword, options: { emailRedirectTo: typeof window !== "undefined" ? `${window.location.origin}/` : "https://deadline-manager.erfan-dev.workers.dev/" } });
         if (error) throw error;
         if (!data.session) setAuthError("حساب ساخته شد. ایمیلت را برای تأیید بررسی کن؛ بعد وارد شو.");
       } else {
