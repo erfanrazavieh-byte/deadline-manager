@@ -174,9 +174,14 @@ export default function Home() {
     const due = now.format("YYYY-MM-DDTHH:mm");
     setEditing(null); setForm({ ...emptyForm(), due }); prepareJalaliFields(due); setModalOpen(true);
   };
+  const reminderChoices = [{v:"10080",l:"۱ هفته قبل"},{v:"4320",l:"۳ روز قبل"},{v:"1440",l:"۱ روز قبل"},{v:"180",l:"۳ ساعت قبل"},{v:"30",l:"۳۰ دقیقه قبل"}];
   const openEdit = (task: Task) => {
+    const offsets = (task.reminders || []).map(r => Math.round((new Date(task.due).getTime() - new Date(r.at).getTime()) / 60000));
+    const reminderMins = reminderChoices
+      .filter(choice => offsets.some(offset => Math.abs(offset - Number(choice.v)) <= 240))
+      .map(choice => choice.v);
     setEditing(task.id);
-    setForm({ title: task.title, description: task.description, due: task.due, category: task.category, priority: task.priority, status: task.status, reminderMins: [] });
+    setForm({ title: task.title, description: task.description, due: task.due, category: task.category, priority: task.priority, status: task.status, reminderMins });
     prepareJalaliFields(task.due);
     setModalOpen(true);
   };
@@ -189,10 +194,12 @@ export default function Home() {
     if (editing) {
       const existing = tasks.find(t => t.id === editing);
       if (!existing) return;
-      const updated: Task = { ...existing, title: form.title.trim(), description: form.description, due: form.due, category: form.category, priority: form.priority, status: form.status };
+      const now = Date.now();
+      const reminders = form.reminderMins.map((m,i) => ({ id: `${now}-r${i}`, at: new Date(new Date(form.due).getTime()-Number(m)*60000).toISOString().slice(0,16) }));
+      const updated: Task = { ...existing, title: form.title.trim(), description: form.description, due: form.due, category: form.category, priority: form.priority, status: form.status, reminders };
       const { error } = await supabase.from("tasks").update({
         title: updated.title, description: updated.description, due: updated.due,
-        category: updated.category, priority: updated.priority, status: updated.status
+        category: updated.category, priority: updated.priority, status: updated.status, reminders: updated.reminders
       }).eq("id", editing).eq("user_id", user.id);
       if (error) { setToast("ذخیره تغییرات ناموفق بود: " + error.message); return; }
       setTasks(old => old.map(t => t.id === editing ? updated : t));
@@ -408,7 +415,7 @@ export default function Home() {
         <label className="field-label">توضیحات <span>اختیاری</span><textarea value={form.description} onChange={e=>setForm({...form,description:e.target.value})} placeholder="جزئیات یا یادداشت کوتاه..." rows={3} maxLength={1000}/></label>
         <div className="form-two"><div className="field-label"><span>تاریخ شمسی ددلاین <b>*</b></span><div className="form-two" style={{ gap: 8, marginTop: 8 }}><select aria-label="روز شمسی" value={jalaliDay} onChange={e=>syncJalaliDate(jalaliYear,jalaliMonth,e.target.value,deadlineTime)} required>{Array.from({ length: jalaliDaysInMonth(jalaliYear, jalaliMonth) }, (_,i)=>String(i+1)).map(d=><option key={d} value={d}>{new Intl.NumberFormat("fa-IR").format(Number(d))}</option>)}</select><select aria-label="ماه شمسی" value={jalaliMonth} onChange={e=>syncJalaliDate(jalaliYear,e.target.value,jalaliDay,deadlineTime)}>{jalaliMonths.map((m,i)=><option key={m} value={String(i+1)}>{m}</option>)}</select><select aria-label="سال شمسی" value={jalaliYear} onChange={e=>syncJalaliDate(e.target.value,jalaliMonth,jalaliDay,deadlineTime)}>{Array.from({length: 11},(_,i)=>momentJalaali().jYear()-5+i).map(y=><option key={y} value={String(y)}>{new Intl.NumberFormat("fa-IR").format(y)}</option>)}</select></div><label style={{display:"block",marginTop:10}}>ساعت ددلاین<input type="time" value={deadlineTime} onChange={e=>syncJalaliDate(jalaliYear,jalaliMonth,jalaliDay,e.target.value)} required/></label></div><label className="field-label">دسته‌بندی<select value={form.category} onChange={e=>setForm({...form,category:e.target.value as Category})}>{categories.map(c=><option key={c}>{c}</option>)}</select></label></div>
         <div className="form-two"><label className="field-label">اولویت<select value={form.priority} onChange={e=>setForm({...form,priority:e.target.value as Priority})}><option value="low">کم</option><option value="medium">متوسط</option><option value="high">زیاد</option></select></label><label className="field-label">وضعیت<select value={form.status} onChange={e=>setForm({...form,status:e.target.value as Status})}><option value="todo">انجام‌نشده</option><option value="doing">در حال انجام</option><option value="done">انجام‌شده</option></select></label></div>
-        {!editing&&<div className="reminder-field"><div className="reminder-label"><Bell size={15}/> یادآورهای پیشنهادی <span>زمان‌ها نسبت به ددلاین محاسبه می‌شوند</span></div><div className="reminder-options">{[{v:"10080",l:"۱ هفته قبل"},{v:"4320",l:"۳ روز قبل"},{v:"1440",l:"۱ روز قبل"},{v:"180",l:"۳ ساعت قبل"},{v:"30",l:"۳۰ دقیقه قبل"}].map(r=><label key={r.v} className={`reminder-option ${form.reminderMins.includes(r.v)?"selected":""}`}><input type="checkbox" checked={form.reminderMins.includes(r.v)} onChange={e=>setForm({...form,reminderMins:e.target.checked?[...form.reminderMins,r.v]:form.reminderMins.filter(v=>v!==r.v)})}/>{r.l}</label>)}</div></div>}
+        <div className="reminder-field"><div className="reminder-label"><Bell size={15}/> یادآورهای پیشنهادی <span>زمان‌ها نسبت به ددلاین محاسبه می‌شوند</span></div><div className="reminder-options">{reminderChoices.map(r=><label key={r.v} className={`reminder-option ${form.reminderMins.includes(r.v)?"selected":""}`}><input type="checkbox" checked={form.reminderMins.includes(r.v)} onChange={e=>setForm({...form,reminderMins:e.target.checked?[...form.reminderMins,r.v]:form.reminderMins.filter(v=>v!==r.v)})}/>{r.l}</label>)}</div></div>
         <div className="modal-actions"><button type="button" className="secondary-btn" onClick={()=>setModalOpen(false)}>انصراف</button><button type="submit" className="primary-btn"><Check size={17}/>{editing?"ذخیره تغییرات":"ثبت کار"}</button></div>
       </form></div>}
       {toast&&<div className="toast"><CheckCircle2 size={17}/>{toast}</div>}
