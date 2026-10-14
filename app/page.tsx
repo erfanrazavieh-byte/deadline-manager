@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import {
   AlarmClock, ArrowDownWideNarrow, Bell, CalendarDays, Check, CheckCheck, Sun, Moon,
   ChevronDown, Circle, Clock3, LayoutDashboard, ListTodo, MoreHorizontal,
-  Plus, Search, Settings2, SlidersHorizontal, Trash2, X, Pencil, ChevronLeft,
+  Plus, Search, Settings2, SlidersHorizontal, Trash2, X, Pencil, ChevronLeft, Download, CalendarPlus,
   ChevronRight, CalendarClock, CircleAlert, Sparkles, Menu, CheckCircle2
 } from "lucide-react";
 
@@ -243,6 +243,24 @@ export default function Home() {
   }, [tasks, user?.id, notifications, permission]);
 
   useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const typing = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement || target?.isContentEditable;
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        document.querySelector<HTMLInputElement>(".search-box input")?.focus();
+      } else if (!typing && event.key.toLowerCase() === "n" && !modalOpen && user) {
+        event.preventDefault();
+        openNew();
+      } else if (event.key === "Escape") {
+        setModalOpen(false); setDatePickerOpen(false); setMobileMenu(false);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [modalOpen, user?.id]);
+
+  useEffect(() => {
     document.documentElement.dataset.theme = theme;
     if (theme === "system") localStorage.removeItem("deadline-manager-theme");
     else localStorage.setItem("deadline-manager-theme", theme);
@@ -390,6 +408,40 @@ export default function Home() {
     }
   };
 
+
+  const exportTasks = (format: "json" | "csv") => {
+    if (!tasks.length) { setToast("هنوز کاری برای خروجی گرفتن وجود ندارد."); return; }
+    const columns = ["title", "description", "due", "category", "priority", "status", "reminders"];
+    let content = "";
+    const type = format === "json" ? "application/json;charset=utf-8" : "text/csv;charset=utf-8";
+    if (format === "json") content = JSON.stringify(tasks, null, 2);
+    else {
+      const escapeCell = (value: unknown) => '"' + String(value ?? "").replace(/"/g, '""') + '"';
+      content = "\uFEFF" + [columns.join(","), ...tasks.map(task => columns.map(key => escapeCell(key === "reminders" ? JSON.stringify(task.reminders) : (task as any)[key])).join(","))].join("\r\n");
+    }
+    const url = URL.createObjectURL(new Blob([content], { type }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `deadline-manager-backup-${new Date().toISOString().slice(0,10)}.${format}`;
+    link.click();
+    URL.revokeObjectURL(url);
+    setToast(format === "json" ? "نسخه پشتیبان JSON آماده شد." : "فایل CSV آماده شد.");
+  };
+
+  const shiftTaskDue = async (task: Task, days: number) => {
+    const due = new Date(task.due);
+    due.setDate(due.getDate() + days);
+    const nextDue = due.toISOString();
+    const reminders = (task.reminders || []).map(reminder => {
+      const offset = new Date(task.due).getTime() - new Date(reminder.at).getTime();
+      return { ...reminder, at: new Date(due.getTime() - offset).toISOString(), sent: false };
+    });
+    const { error } = await supabase.from("tasks").update({ due: nextDue, reminders }).eq("id", task.id).eq("user_id", user!.id);
+    if (error) { setToast("تغییر ددلاین ذخیره نشد: " + error.message); return; }
+    setTasks(prev => prev.map(item => item.id === task.id ? { ...item, due: nextDue, reminders } : item));
+    setToast("ددلاین به فردا منتقل شد.");
+  };
+
   const testNotification = async () => {
     if (!("Notification" in window) || Notification.permission !== "granted") {
       setToast("ابتدا «فعال‌سازی» را بزن و اجازه اعلان را بده.");
@@ -483,6 +535,7 @@ export default function Home() {
             <div className="settings-card">
               <div className="settings-row"><div className="settings-icon"><Bell size={20}/></div><div className="settings-copy"><strong>اعلان‌های مرورگر</strong><p>برای نمایش اعلان، اجازه مرورگر لازم است. این نسخه اعلان آزمایشی را پشتیبانی می‌کند.</p><span className={`permission ${permission==="granted"?"ok":""}`}>وضعیت: {permission==="granted"?"فعال":permission==="denied"?"مسدود شده":"نیازمند اجازه"}</span></div><button className="primary-btn compact" onClick={askNotifications}>{notifications?"بررسی مجدد":"فعال‌سازی"}</button></div>
               <div className="settings-row"><div className="settings-icon"><AlarmClock size={20}/></div><div className="settings-copy"><strong>آزمایش اعلان</strong><p>یک اعلان آزمایشی روی همین دستگاه نمایش بده.</p></div><button className="secondary-btn compact" onClick={testNotification}>ارسال آزمایشی</button></div>
+              <div className="settings-row"><div className="settings-icon"><Download size={20}/></div><div className="settings-copy"><strong>پشتیبان‌گیری از کارها</strong><p>یک نسخه از ددلاین‌ها و یادآورها دانلود کن.</p></div><div className="settings-export-actions"><button className="secondary-btn compact" onClick={()=>exportTasks("json")}>خروجی JSON</button><button className="secondary-btn compact" onClick={()=>exportTasks("csv")}>خروجی CSV</button></div></div>
               
             </div>
           </div>
@@ -520,7 +573,7 @@ export default function Home() {
                           <div className="task-meta"><span className={`category-tag ${task.category==="دانشگاه"?"cat-study":task.category==="کار"?"cat-work":task.category==="پروژه شخصی"?"cat-project":"cat-life"}`}><i/>{task.category}</span><span className="task-due"><Clock3 size={13}/>{faDateTime(task.due)}</span>{task.reminders.length>0&&<span className="reminder-count"><Bell size={12}/>{task.reminders.length} یادآور</span>}</div>
                         </div>
                         <div className="task-end"><span className={`priority priority-${task.priority}`}>{task.priority==="high"?"زیاد":task.priority==="medium"?"متوسط":"کم"}</span><span className={`time-left ${late?"time-late":""}`}>{task.status==="done"?"انجام‌شده":timeLeft(task.due)}</span></div>
-                        <div className="task-actions"><button className="icon-btn small-icon" onClick={()=>openEdit(task)} aria-label="ویرایش"><Pencil size={15}/></button><button className="icon-btn small-icon delete-icon" onClick={()=>deleteTask(task)} aria-label="حذف"><Trash2 size={15}/></button></div>
+                        <div className="task-actions"><button className="icon-btn small-icon" onClick={()=>shiftTaskDue(task,1)} aria-label="انتقال ددلاین به فردا" title="انتقال به فردا"><CalendarPlus size={15}/></button><button className="icon-btn small-icon" onClick={()=>openEdit(task)} aria-label="ویرایش"><Pencil size={15}/></button><button className="icon-btn small-icon delete-icon" onClick={()=>deleteTask(task)} aria-label="حذف"><Trash2 size={15}/></button></div>
                       </article>;
                     })
                   }
