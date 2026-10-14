@@ -305,12 +305,12 @@ export default function Home() {
     <main className="app-shell">
       <aside className={`sidebar ${mobileMenu ? "sidebar-open" : ""}`}>
         <div className="brand"><div className="brand-mark"><AlarmClock size={22}/></div><div><strong>ددلاین</strong><span>مدیریت زمان، ساده‌تر</span></div><button className="mobile-close icon-btn" onClick={()=>setMobileMenu(false)} aria-label="بستن"><X size={18}/></button></div>
-        <button className="add-task-button" onClick={openNew}><Plus size={18}/> ایجاد کار جدید <span>⌘ K</span></button>
+        <button className="add-task-button" onClick={()=>{setShowSettings(false);openNew();}}><Plus size={18}/> ایجاد کار جدید <span>⌘ K</span></button>
         <div className="nav-caption">فضای کاری</div>
         <nav className="nav-list">
           {navItems.map(item => {
             const Icon = item.icon;
-            return <button key={item.name} className={`nav-item ${activeNav===item.name?"active":""}`} onClick={()=>{setActiveNav(item.name);setMobileMenu(false);}}>
+            return <button key={item.name} className={`nav-item ${activeNav===item.name?"active":""}`} onClick={()=>{setActiveNav(item.name);setShowSettings(false);setMobileMenu(false);}}>
               <Icon size={18}/><span>{item.name}</span>{item.count !== undefined && <small>{item.count}</small>}
             </button>;
           })}
@@ -358,7 +358,7 @@ export default function Home() {
 
             <div className="workspace-grid">
               <div className="tasks-section">
-                <div className="section-heading"><div><h2>{activeNav==="نمای کلی"?"کارهای پیش رو":`فهرست ${activeNav}`}</h2><span>{shownTasks.length.toLocaleString("fa-IR")} کار</span></div><button className="text-button" onClick={()=>setActiveNav("همه کارها")}>مشاهده همه <ChevronLeft size={15}/></button></div>
+                <div className="section-heading"><div><h2>{activeNav==="نمای کلی"?"کارهای پیش رو":`فهرست ${activeNav}`}</h2><span>{shownTasks.length.toLocaleString("fa-IR")} کار</span></div><button className="text-button" onClick={()=>{setActiveNav("همه کارها");setShowSettings(false);}}>مشاهده همه <ChevronLeft size={15}/></button></div>
                 <div className="toolbar">
                   <div className="search-box"><Search size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="جست‌وجوی کارها..."/>{query&&<button onClick={()=>setQuery("")} aria-label="پاک کردن"><X size={14}/></button>}</div>
                   <div className="filter-wrap"><SlidersHorizontal size={15}/><select value={categoryFilter} onChange={e=>setCategoryFilter(e.target.value)} aria-label="فیلتر دسته‌بندی"><option>همه دسته‌ها</option>{categories.map(c=><option key={c}>{c}</option>)}</select></div>
@@ -419,7 +419,7 @@ export default function Home() {
         <div className="modal-actions"><button type="button" className="secondary-btn" onClick={()=>setModalOpen(false)}>انصراف</button><button type="submit" className="primary-btn"><Check size={17}/>{editing?"ذخیره تغییرات":"ثبت کار"}</button></div>
       </form></div>}
       {toast&&<div className="toast"><CheckCircle2 size={17}/>{toast}</div>}
-      <div className="mobile-bottom"><button onClick={()=>setActiveNav("نمای کلی")} className={activeNav==="نمای کلی"?"selected":""}><LayoutDashboard size={19}/><span>نمای کلی</span></button><button onClick={()=>setActiveNav("همه کارها")} className={activeNav==="همه کارها"?"selected":""}><ListTodo size={19}/><span>کارها</span></button><button onClick={openNew}><Plus size={22}/><span>کار جدید</span></button><button onClick={()=>setShowSettings(true)}><Settings2 size={19}/><span>تنظیمات</span></button></div>
+      <div className="mobile-bottom"><button onClick={()=>{setActiveNav("نمای کلی");setShowSettings(false);}} className={activeNav==="نمای کلی"?"selected":""}><LayoutDashboard size={19}/><span>نمای کلی</span></button><button onClick={()=>setActiveNav("همه کارها")} className={activeNav==="همه کارها"?"selected":""}><ListTodo size={19}/><span>کارها</span></button><button onClick={openNew}><Plus size={22}/><span>کار جدید</span></button><button onClick={()=>setShowSettings(true)}><Settings2 size={19}/><span>تنظیمات</span></button></div>
     </main>
   );
 }
