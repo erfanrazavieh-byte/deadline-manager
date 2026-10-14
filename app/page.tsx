@@ -43,6 +43,22 @@ type Task = {
 
 const categories: Category[] = ["دانشگاه", "کار", "پروژه شخصی", "زندگی"];
 
+const dailyVerses = [
+  { poet: "حافظ", first: "دوش دیدم که ملائک در میخانه زدند", second: "گل آدم بسرشتند و به پیمانه زدند" },
+  { poet: "سعدی", first: "به جهان خرم از آنم که جهان خرم از اوست", second: "عاشقم بر همه عالم که همه عالم از اوست" },
+  { poet: "مولانا", first: "از محبت تلخ‌ها شیرین شود", second: "از محبت مس‌ها زرین شود" },
+  { poet: "حافظ", first: "در ازل پرتو حسنت ز تجلی دم زد", second: "عشق پیدا شد و آتش به همه عالم زد" },
+  { poet: "سعدی", first: "تن آدمی شریف است به جان آدمیت", second: "نه همین لباس زیباست نشان آدمیت" },
+  { poet: "مولانا", first: "این جهان کوه است و فعل ما ندا", second: "سوی ما آید نداها را صدا" },
+  { poet: "حافظ", first: "صلاح کار کجا و من خراب کجا", second: "ببین تفاوت ره کز کجاست تا به کجا" },
+  { poet: "سعدی", first: "نابرده رنج گنج میسر نمی‌شود", second: "مزد آن گرفت جان برادر که کار کرد" },
+  { poet: "مولانا", first: "تو مگو همه به جنگند و ز صلح من چه آید", second: "تو یکی نه‌ای هزاری تو چراغ خود برافروز" },
+  { poet: "حافظ", first: "یوسف گمگشته بازآید به کنعان غم مخور", second: "کلبه احزان شود روزی گلستان غم مخور" },
+  { poet: "سعدی", first: "هر که دلارام دید از دلش آرام رفت", second: "چشم ندارد خلاص هر که در این دام رفت" },
+  { poet: "مولانا", first: "آب کم جو تشنگی آور به دست", second: "تا بجوشد آبت از بالا و پست" }
+];
+
+
 
 const faDate = (date: Date, opts: Intl.DateTimeFormatOptions = {}) =>
   new Intl.DateTimeFormat("fa-IR-u-ca-persian", { day: "numeric", month: "short", ...opts }).format(date);
@@ -238,6 +254,8 @@ export default function Home() {
     setTheme(currentlyDark ? "light" : "dark");
   };
 
+  const dayKey = (() => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; })();
+  const dailyVerse = dailyVerses[dayKey.split("-").reduce((sum, part) => sum + Number(part), 0) % dailyVerses.length];
   const activeTasks = tasks.filter(t => t.status !== "done");
   const todayStart = new Date(); todayStart.setHours(0,0,0,0);
   const tomorrow = new Date(todayStart); tomorrow.setDate(tomorrow.getDate()+1);
@@ -529,7 +547,7 @@ export default function Home() {
                   {activeTasks.filter(t=>new Date(t.due)>=new Date()).sort((a,b)=>+new Date(a.due)-+new Date(b.due)).slice(0,3).map((t,i)=><div className="upcoming-item" key={t.id}><div className={`upcoming-line line-${i}`}/><div><strong>{t.title}</strong><span>{faDateTime(t.due)}</span></div><small>{timeLeft(t.due)}</small></div>)}
                   {activeTasks.filter(t=>new Date(t.due)>=new Date()).length===0&&<p className="muted empty-upcoming">ددلاین آینده‌ای ثبت نشده.</p>}
                 </div>
-                <div className="tip-card"><div className="tip-icon"><Sparkles size={18}/></div><div><strong>یک نکته برای تمرکز</strong><p>کار مهم بعدی را مشخص کن و فقط روی همان تمرکز کن.</p></div></div>
+                <div className="tip-card"><div className="tip-icon"><Sparkles size={18}/></div><div><strong>بیت امروز از {dailyVerse.poet}</strong><p className="daily-verse">{dailyVerse.first}<br/>{dailyVerse.second}</p></div></div>
               </aside>
             </div>
           </div>
