@@ -315,11 +315,14 @@ export default function Home() {
     { name: "انجام‌شده", icon: CheckCheck }
   ];
   const shownTasks = activeNav === "نمای کلی" ? visibleTasks.filter(t=>t.status!=="done").slice(0,4) : visibleTasks;
-  const monthDays = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth()+1, 0).getDate();
-  const monthOffset = (new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1).getDay()+1)%7;
+  const calendarJalali = momentJalaali(calendarMonth);
+  const calendarJYear = calendarJalali.jYear();
+  const calendarJMonth = calendarJalali.jMonth() + 1;
+  const monthDays = jalaliDaysInMonth(calendarJYear, calendarJMonth);
+  const monthOffset = (momentJalaali(`${calendarJYear}/${calendarJMonth}/1`, "jYYYY/jM/jD").day() + 1) % 7;
   const taskDaySet = new Set(tasks.map(t => {
-    const d = new Date(t.due);
-    return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    const d = momentJalaali(t.due);
+    return `${d.jYear()}-${d.jMonth() + 1}-${d.jDate()}`;
   }));
 
   if (authLoading) return <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#f7f8fc", color: "#25283b", fontFamily: "inherit" }}><p>در حال بررسی حساب کاربری…</p></main>;
@@ -424,13 +427,14 @@ export default function Home() {
 
               <aside className="right-column">
                 <div className="calendar-card">
-                  <div className="calendar-head"><div><h2>تقویم ددلاین‌ها</h2><p>{new Intl.DateTimeFormat("fa-IR-u-ca-persian",{month:"long",year:"numeric"}).format(calendarMonth)}</p></div><div className="calendar-arrows"><button className="icon-btn" onClick={()=>setCalendarMonth(new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()-1,1))} aria-label="ماه قبل"><ChevronRight size={16}/></button><button className="icon-btn" onClick={()=>setCalendarMonth(new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()+1,1))} aria-label="ماه بعد"><ChevronLeft size={16}/></button></div></div>
+                  <div className="calendar-head"><div><h2>تقویم ددلاین‌ها</h2><p>{new Intl.DateTimeFormat("fa-IR-u-ca-persian",{month:"long",year:"numeric"}).format(calendarMonth)}</p></div><div className="calendar-arrows"><button className="icon-btn" onClick={()=>setCalendarMonth(momentJalaali(calendarMonth).subtract(1, "jMonth").toDate())} aria-label="ماه قبل"><ChevronRight size={16}/></button><button className="icon-btn" onClick={()=>setCalendarMonth(momentJalaali(calendarMonth).add(1, "jMonth").toDate())} aria-label="ماه بعد"><ChevronLeft size={16}/></button></div></div>
                   <div className="calendar-grid">
                     {["ش","ی","د","س","چ","پ","ج"].map(d=><span key={d} className="weekday">{d}</span>)}
                     {Array.from({length:monthOffset},(_,i)=><span key={`blank-${i}`}/>)}
                     {Array.from({length:monthDays},(_,i)=>{
-                      const day=i+1, key=`${calendarMonth.getFullYear()}-${calendarMonth.getMonth()}-${day}`;
-                      const isToday = new Date().getDate()===day && new Date().getMonth()===calendarMonth.getMonth() && new Date().getFullYear()===calendarMonth.getFullYear();
+                      const day=i+1, key=`${calendarJYear}-${calendarJMonth}-${day}`;
+                      const todayJalali = momentJalaali();
+                      const isToday = todayJalali.jDate()===day && todayJalali.jMonth()+1===calendarJMonth && todayJalali.jYear()===calendarJYear;
                       return <button key={day} className={`calendar-day ${isToday?"today":""} ${taskDaySet.has(key)?"has-task":""}`} onClick={()=>{setActiveNav("همه کارها");setQuery("");}}>{day.toLocaleString("fa-IR")}{taskDaySet.has(key)&&<i/>}</button>;
                     })}
                   </div>
