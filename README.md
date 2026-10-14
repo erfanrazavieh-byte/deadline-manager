@@ -69,3 +69,27 @@ REDIS_URL=
 
 ## استقرار
 این نسخه UI را می‌توان روی یک میزبان پشتیبان Next.js مستقر کرد. برای اعلان پایدار در زمان تعیین‌شده، قبل از استفاده واقعی باید API، دیتابیس، زمان‌بند/صف، Service Worker، ذخیره اشتراک‌ها و تست end-to-end تکمیل شوند. HTTPS برای Web Push در محیط عمومی ضروری است (به‌جز localhost در توسعه).
+
+## فعال‌سازی یادآورهای واقعی (Web Push)
+
+برای دریافت اعلان حتی وقتی صفحه سایت باز نیست، این مراحل را یک‌بار انجام بده:
+
+1. در Supabase وارد **SQL Editor** شو، فایل `supabase/push-notifications.sql` را باز کن و تمام محتوای آن را اجرا کن. این فایل جدول اشتراک اعلان‌ها، گزارش ارسال و تابع امن زمان‌بندی را ایجاد می‌کند.
+2. روی کامپیوتری که Node.js دارد، در ریشه پروژه اجرا کن:
+   ```bash
+   node scripts/generate-vapid-keys.mjs
+   ```
+   خروجی چهار متغیر را نگه دار. برای `VAPID_SUBJECT` یک ایمیل واقعی وارد کن.
+3. در Netlify وارد **Site configuration → Environment variables** شو و این متغیرها را تنظیم کن:
+   - `NEXT_PUBLIC_SUPABASE_URL` (همان URL پروژه Supabase)
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` (کلید عمومی anon/publishable)
+   - `SUPABASE_SERVICE_ROLE_KEY` (کلید محرمانه service_role از تنظیمات API پروژه Supabase)
+   - `NEXT_PUBLIC_VAPID_PUBLIC_KEY`
+   - `VAPID_PUBLIC_KEY`
+   - `VAPID_PRIVATE_KEY`
+   - `VAPID_SUBJECT`
+   - `SCHEDULER_SECRET` (یک مقدار تصادفی و طولانی؛ فقط برای فراخوانی دستی تابع)
+4. پس از ذخیره متغیرها، سایت را دوباره Deploy کن.
+5. در سایت با حساب خودت وارد شو، از **تنظیمات → اعلان‌های مرورگر → فعال‌سازی** استفاده کن و اجازه اعلان را بده. برای هر دستگاه/مرورگر این کار باید جداگانه انجام شود.
+
+تابع `netlify/functions/send-reminders.mjs` هر دقیقه یادآورهای رسیده را بررسی می‌کند. ارسال واقعی به اجرای موفق SQL، تنظیم درست متغیرهای محیطی، مجوز اعلان و پشتیبانی مرورگر/سیستم‌عامل وابسته است. اگر سایت از قبل یک جدول `tasks` با ساختار متفاوت از ستون‌های استفاده‌شده در این پروژه دارد، قبل از اجرای SQL ساختار جدول را بررسی کن. کلید `SUPABASE_SERVICE_ROLE_KEY` و `VAPID_PRIVATE_KEY` را هرگز با پیشوند `NEXT_PUBLIC_` تعریف نکن و در GitHub قرار نده.
