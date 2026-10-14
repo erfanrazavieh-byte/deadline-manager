@@ -47,7 +47,7 @@ const reminderChoices = [
   { v: "1440", l: "۱ روز قبل" }, { v: "180", l: "۳ ساعت قبل" }, { v: "30", l: "۳۰ دقیقه قبل" }
 ];
 const parseReminderTime = (value: string) =>
-  new Date(/(?:Z|[+-]\d{2}:?\\d{2})$/i.test(value) ? value : value + "Z").getTime();
+  new Date(/(?:Z|[+-]\d{2}:?\d{2})$/i.test(value) ? value : value + "Z").getTime();
 const inferReminderOffset = (due: string, reminder: Reminder) => {
   if (typeof reminder.offsetMins === "number") return reminder.offsetMins;
   const diff = (new Date(due).getTime() - parseReminderTime(reminder.at)) / 60000;
