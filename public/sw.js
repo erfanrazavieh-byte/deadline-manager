@@ -9,8 +9,6 @@ self.addEventListener("push", (event) => {
   const title = data.title || "یادآور ددلاین";
   const options = {
     body: data.body || "یک یادآور برای یکی از کارهایت داری.",
-    icon: "/icon-192.png",
-    badge: "/icon-192.png",
     data: { url: data.url || "/" },
     tag: data.tag || undefined,
     renotify: false,
