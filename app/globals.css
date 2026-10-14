@@ -520,3 +520,20 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   :root[data-theme="system"] .calendar-day.has-task:not(.today):hover{background:#40345f!important;color:#fff!important}
   :root[data-theme="system"] .calendar-day.today{background:#8a7af4!important;color:#fff!important}
 }
+
+
+/* Utility actions added to task rows and settings. */
+.settings-export-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.task-actions .small-icon{flex-shrink:0}
+.task-actions .small-icon:hover{background:#eeebff;color:#5e52cb}
+:root[data-theme="dark"] .settings-export-actions .secondary-btn{background:#252a39;color:#e4e8f5;border-color:#363d51}
+:root[data-theme="dark"] .task-actions .small-icon:hover{background:#30294a;color:#d8ceff}
+@media(prefers-color-scheme:dark){
+  :root[data-theme="system"] .settings-export-actions .secondary-btn{background:#252a39;color:#e4e8f5;border-color:#363d51}
+  :root[data-theme="system"] .task-actions .small-icon:hover{background:#30294a;color:#d8ceff}
+}
+@media(max-width:700px){
+  .settings-export-actions{width:100%;margin-right:46px}
+  .settings-export-actions .secondary-btn{flex:1}
+  .task-actions{gap:4px}
+}
