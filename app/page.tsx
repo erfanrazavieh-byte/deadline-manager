@@ -95,6 +95,10 @@ export default function Home() {
     const target = momentJalaali().add(days, "days");
     setPickerYear(String(target.jYear())); setPickerMonth(String(target.jMonth() + 1)); setPickerDay(String(target.jDate()));
   };
+  const chooseEndOfMonth = () => {
+    const target = momentJalaali(`${pickerYear}/${pickerMonth}/1`, "jYYYY/jM/jD").endOf("jMonth");
+    setPickerDay(String(target.jDate()));
+  };
   const confirmPickedDate = () => {
     syncJalaliDate(pickerYear, pickerMonth, pickerDay, deadlineTime);
     setDatePickerOpen(false);
@@ -482,7 +486,7 @@ export default function Home() {
             <div className="date-picker-weekdays">{["ش","ی","د","س","چ","پ","ج"].map(d=><span key={d}>{d}</span>)}</div>
             <div className="date-picker-days">{Array.from({length:(momentJalaali(`${pickerYear}/${pickerMonth}/1`,"jYYYY/jM/jD").day()+1)%7},(_,i)=><span key={`blank-${i}`}/>)}{Array.from({length:jalaliDaysInMonth(pickerYear,pickerMonth)},(_,i)=>{const d=String(i+1);const today=momentJalaali();const isToday=Number(d)===today.jDate()&&Number(pickerMonth)===today.jMonth()+1&&Number(pickerYear)===today.jYear();return <button type="button" key={d} className={`date-picker-day ${pickerDay===d?"selected":""} ${isToday?"is-today":""}`} onClick={()=>setPickerDay(d)}>{new Intl.NumberFormat("fa-IR").format(i+1)}</button>})}</div>
           </div>
-          <aside className="date-picker-side"><strong>انتخاب سریع</strong><button type="button" onClick={()=>chooseQuickDate(0)}><CalendarDays size={15}/> امروز</button><button type="button" onClick={()=>chooseQuickDate(7)}><Clock3 size={15}/> ۷ روز دیگر</button><button type="button" onClick={()=>chooseQuickDate(30)}><CalendarDays size={15}/> ۳۰ روز دیگر</button><button type="button" onClick={()=>chooseQuickDate(0)}><CalendarDays size={15}/> امروز</button><label>زمان ددلاین<input type="time" value={deadlineTime} onChange={e=>setDeadlineTime(e.target.value)} required/></label></aside>
+          <aside className="date-picker-side"><strong>انتخاب سریع</strong><button type="button" onClick={()=>chooseQuickDate(0)}><CalendarDays size={15}/> امروز</button><button type="button" onClick={()=>chooseQuickDate(7)}><Clock3 size={15}/> ۷ روز دیگر</button><button type="button" onClick={()=>chooseQuickDate(30)}><CalendarDays size={15}/> ۳۰ روز دیگر</button><button type="button" onClick={chooseEndOfMonth}><CalendarDays size={15}/> پایان ماه</button><label>زمان ددلاین<input type="time" value={deadlineTime} onChange={e=>setDeadlineTime(e.target.value)} required/></label></aside>
           <div className="date-picker-actions"><button type="button" className="secondary-btn" onClick={()=>setDatePickerOpen(false)}>لغو</button><button type="button" className="primary-btn" onClick={confirmPickedDate}><Check size={16}/> تأیید تاریخ</button></div>
         </div>}<label style={{display:"block",marginTop:10}}>ساعت ددلاین<input type="time" value={deadlineTime} onChange={e=>syncJalaliDate(jalaliYear,jalaliMonth,jalaliDay,e.target.value)} required/></label></div><label className="field-label">دسته‌بندی<select value={form.category} onChange={e=>setForm({...form,category:e.target.value as Category})}>{categories.map(c=><option key={c}>{c}</option>)}</select></label></div>
         <div className="form-two"><label className="field-label">اولویت<select value={form.priority} onChange={e=>setForm({...form,priority:e.target.value as Priority})}><option value="low">کم</option><option value="medium">متوسط</option><option value="high">زیاد</option></select></label><label className="field-label">وضعیت<select value={form.status} onChange={e=>setForm({...form,status:e.target.value as Status})}><option value="todo">انجام‌نشده</option><option value="doing">در حال انجام</option><option value="done">انجام‌شده</option></select></label></div>
