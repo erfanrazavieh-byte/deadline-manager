@@ -169,40 +169,58 @@ export default function Home() {
 
   useEffect(() => {
     if (!user?.id || !notifications || permission !== "granted" || !("Notification" in window)) return;
-    const checkReminders = () => {
-      const now = Date.now();
-      for (const task of tasks) {
-        if (task.status === "done") continue;
-        for (const reminder of task.reminders || []) {
-          const key = `deadline-manager-sent-${user.id}-${task.id}-${reminder.id}`;
-          if (localStorage.getItem(key) === "true") continue;
-          const reminderTime = new Date(reminder.at).getTime();
-          if (!Number.isFinite(reminderTime)) {
-            localStorage.setItem(key, "true");
-            continue;
-          }
-          // Don't send stale reminders after the user reopens the site.
-          if (reminderTime < now - 2 * 60 * 1000) {
-            localStorage.setItem(key, "true");
-            continue;
-          }
-          if (reminderTime <= now) {
-            try {
-              new Notification("یادآوری ددلاین", {
-                body: task.title,
-                tag: `deadline-${task.id}-${reminder.id}`
-              });
+    let cancelled = false;
+    let interval: number | undefined;
+
+    const checkReminders = async () => {
+      if (document.visibilityState === "hidden") return;
+      try {
+        const registration = await getNotificationRegistration();
+        if (cancelled) return;
+        const now = Date.now();
+        for (const task of tasks) {
+          if (task.status === "done") continue;
+          for (const reminder of task.reminders || []) {
+            const key = `deadline-manager-sent-${user.id}-${task.id}-${reminder.id}`;
+            if (localStorage.getItem(key) === "true") continue;
+            const reminderTime = new Date(reminder.at).getTime();
+            if (!Number.isFinite(reminderTime)) {
               localStorage.setItem(key, "true");
-            } catch {
-              // Browser or device may block notifications.
+              continue;
+            }
+            // Ignore reminders that were missed by more than 2 minutes while the app was closed.
+            if (reminderTime < now - 2 * 60 * 1000) {
+              localStorage.setItem(key, "true");
+              continue;
+            }
+            if (reminderTime <= now) {
+              try {
+                await registration.showNotification("یادآوری ددلاین", {
+                  body: task.title,
+                  tag: `deadline-${task.id}-${reminder.id}`,
+                  data: { url: "/" }
+                });
+                localStorage.setItem(key, "true");
+              } catch (error) {
+                setToast("ارسال یادآوری ناموفق بود. اجازه اعلان مرورگر را بررسی کن.");
+              }
             }
           }
         }
+      } catch {
+        // Keep reminders pending if the service worker is not available yet.
       }
     };
-    checkReminders();
-    const interval = window.setInterval(checkReminders, 15000);
-    return () => window.clearInterval(interval);
+
+    void checkReminders();
+    interval = window.setInterval(() => { void checkReminders(); }, 15000);
+    const onVisibilityChange = () => { if (document.visibilityState === "visible") void checkReminders(); };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      cancelled = true;
+      if (interval !== undefined) window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
   }, [tasks, user?.id, notifications, permission]);
 
   const activeTasks = tasks.filter(t => t.status !== "done");
