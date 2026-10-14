@@ -34,7 +34,7 @@ const fromJalaliParts = (year: string, month: string, day: string, time: string)
 type Status = "todo" | "doing" | "done";
 type Priority = "low" | "medium" | "high";
 type Category = "دانشگاه" | "کار" | "پروژه شخصی" | "زندگی";
-type Reminder = { id: string; at: string; sent?: boolean };
+type Reminder = { id: string; at: string; offsetMins?: number; sent?: boolean };
 type Task = {
   id: string; title: string; description: string; due: string;
   category: Category; priority: Priority; status: Status; reminders: Reminder[];
@@ -42,6 +42,24 @@ type Task = {
 };
 
 const categories: Category[] = ["دانشگاه", "کار", "پروژه شخصی", "زندگی"];
+const reminderChoices = [
+  { v: "10080", l: "۱ هفته قبل" }, { v: "4320", l: "۳ روز قبل" },
+  { v: "1440", l: "۱ روز قبل" }, { v: "180", l: "۳ ساعت قبل" }, { v: "30", l: "۳۰ دقیقه قبل" }
+];
+const parseReminderTime = (value: string) =>
+  new Date(/(?:Z|[+-]\\d{2}:?\\d{2})$/i.test(value) ? value : value + "Z").getTime();
+const inferReminderOffset = (due: string, reminder: Reminder) => {
+  if (typeof reminder.offsetMins === "number") return reminder.offsetMins;
+  const diff = (new Date(due).getTime() - parseReminderTime(reminder.at)) / 60000;
+  return reminderChoices.reduce((best, item) =>
+    Math.abs(Number(item.v) - diff) < Math.abs(Number(best) - diff) ? item.v : best, reminderChoices[0].v);
+};
+const urlBase64ToUint8Array = (value: string) => {
+  const padding = "=".repeat((4 - value.length % 4) % 4);
+  const base64 = (value + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = window.atob(base64);
+  return Uint8Array.from(raw, char => char.charCodeAt(0));
+};
 
 
 const faDate = (date: Date, opts: Intl.DateTimeFormatOptions = {}) =>
@@ -176,7 +194,7 @@ export default function Home() {
   };
   const openEdit = (task: Task) => {
     setEditing(task.id);
-    setForm({ title: task.title, description: task.description, due: task.due, category: task.category, priority: task.priority, status: task.status, reminderMins: [] });
+    setForm({ title: task.title, description: task.description, due: task.due, category: task.category, priority: task.priority, status: task.status, reminderMins: Array.from(new Set(task.reminders.map(r => String(inferReminderOffset(task.due, r))))) });
     prepareJalaliFields(task.due);
     setModalOpen(true);
   };
@@ -189,17 +207,27 @@ export default function Home() {
     if (editing) {
       const existing = tasks.find(t => t.id === editing);
       if (!existing) return;
-      const updated: Task = { ...existing, title: form.title.trim(), description: form.description, due: form.due, category: form.category, priority: form.priority, status: form.status };
+      const previousByOffset = new Map(existing.reminders.map(r => [String(inferReminderOffset(existing.due, r)), r]));
+      const reminders: Reminder[] = form.reminderMins.map((m, i) => {
+        const offsetMins = Number(m);
+        const previous = previousByOffset.get(m);
+        return {
+          id: previous?.id || `${Date.now()}-r${i}`,
+          at: new Date(new Date(form.due).getTime() - offsetMins * 60000).toISOString(),
+          offsetMins,
+        };
+      });
+      const updated: Task = { ...existing, title: form.title.trim(), description: form.description, due: form.due, category: form.category, priority: form.priority, status: form.status, reminders };
       const { error } = await supabase.from("tasks").update({
         title: updated.title, description: updated.description, due: updated.due,
-        category: updated.category, priority: updated.priority, status: updated.status
+        category: updated.category, priority: updated.priority, status: updated.status, reminders: updated.reminders
       }).eq("id", editing).eq("user_id", user.id);
       if (error) { setToast("ذخیره تغییرات ناموفق بود: " + error.message); return; }
       setTasks(old => old.map(t => t.id === editing ? updated : t));
       setToast("تغییرات ذخیره شد.");
     } else {
       const now = Date.now();
-      const reminders = form.reminderMins.map((m,i) => ({ id: `${now}-r${i}`, at: new Date(new Date(form.due).getTime()-Number(m)*60000).toISOString().slice(0,16) }));
+      const reminders: Reminder[] = form.reminderMins.map((m,i) => ({ id: `${now}-r${i}`, at: new Date(new Date(form.due).getTime()-Number(m)*60000).toISOString(), offsetMins: Number(m) }));
       const created: Task = { id: `${now}`, title: form.title.trim(), description: form.description, due: form.due, category: form.category, priority: form.priority, status: form.status, reminders, createdAt: new Date().toISOString() };
       const { error } = await supabase.from("tasks").insert({
         id: created.id, user_id: user.id, title: created.title, description: created.description,
@@ -247,18 +275,67 @@ export default function Home() {
     if (error) setToast("خروج انجام نشد: " + error.message);
   };
   const askNotifications = async () => {
-    if (!("Notification" in window)) { setToast("این مرورگر از اعلان‌های وب پشتیبانی نمی‌کند."); return; }
-    const result = await Notification.requestPermission();
-    setPermission(result);
-    const enabled = result === "granted";
-    setNotifications(enabled);
-    localStorage.setItem("deadline-manager-notifications", String(enabled));
-    setToast(enabled ? "اجازه اعلان مرورگر فعال شد." : "اجازه اعلان داده نشد.");
+    if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+      setToast("این مرورگر از اعلان‌های پس‌زمینه پشتیبانی نمی‌کند."); return;
+    }
+    if (!user) { setToast("ابتدا وارد حساب کاربری شو."); return; }
+    try {
+      const result = await Notification.requestPermission();
+      setPermission(result);
+      const enabled = result === "granted";
+      setNotifications(enabled);
+      localStorage.setItem("deadline-manager-notifications", String(enabled));
+      if (!enabled) { setToast("اجازه اعلان داده نشد."); return; }
+
+      const registration = await navigator.serviceWorker.register("/sw.js");
+      const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+      if (!vapidPublicKey) {
+        setToast("اجازه مرورگر فعال شد؛ برای یادآوری پس‌زمینه باید کلید VAPID در Netlify تنظیم شود.");
+        return;
+      }
+      if (!("PushManager" in window)) {
+        setToast("این مرورگر Web Push را پشتیبانی نمی‌کند."); return;
+      }
+      let subscription = await registration.pushManager.getSubscription();
+      if (!subscription) {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+        });
+      }
+      const json = subscription.toJSON();
+      if (!json.keys?.p256dh || !json.keys?.auth) throw new Error("کلیدهای اشتراک اعلان دریافت نشد.");
+      const { error } = await supabase.from("push_subscriptions").upsert({
+        user_id: user.id,
+        endpoint: subscription.endpoint,
+        p256dh: json.keys.p256dh,
+        auth: json.keys.auth,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "endpoint" });
+      if (error) throw error;
+      setToast("اعلان‌های پس‌زمینه برای این دستگاه فعال شدند.");
+    } catch (error: any) {
+      setToast("فعال‌سازی اعلان کامل نشد: " + (error?.message || "خطای نامشخص"));
+    }
   };
-  const testNotification = () => {
-    if (!("Notification" in window) || Notification.permission !== "granted") { setToast("ابتدا اجازه اعلان را فعال کن."); return; }
-    new Notification("ددلاین | اعلان آزمایشی", { body: "اعلان‌های مرورگر روی این دستگاه فعال هستند." });
-    setToast("اعلان آزمایشی ارسال شد.");
+  const testNotification = async () => {
+    if (!("Notification" in window) || Notification.permission !== "granted") {
+      setToast("ابتدا اجازه اعلان را فعال کن."); return;
+    }
+    try {
+      if ("serviceWorker" in navigator) {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.showNotification("ددلاین | اعلان آزمایشی", {
+          body: "اعلان‌های این دستگاه فعال هستند.",
+          data: { url: "/" },
+        });
+      } else {
+        new Notification("ددلاین | اعلان آزمایشی", { body: "اعلان‌های این دستگاه فعال هستند." });
+      }
+      setToast("اعلان آزمایشی ارسال شد.");
+    } catch (error: any) {
+      setToast("ارسال اعلان آزمایشی ناموفق بود: " + (error?.message || "خطای نامشخص"));
+    }
   };
 
   const navItems = [
@@ -330,9 +407,9 @@ export default function Home() {
           <div className="content settings-content">
             <div className="page-heading"><div><div className="eyebrow">شخصی‌سازی</div><h1>تنظیمات</h1><p>تنظیم تجربه کار با ددلاین</p></div></div>
             <div className="settings-card">
-              <div className="settings-row"><div className="settings-icon"><Bell size={20}/></div><div className="settings-copy"><strong>اعلان‌های مرورگر</strong><p>برای نمایش اعلان، اجازه مرورگر لازم است. این نسخه اعلان آزمایشی را پشتیبانی می‌کند.</p><span className={`permission ${permission==="granted"?"ok":""}`}>وضعیت: {permission==="granted"?"فعال":permission==="denied"?"مسدود شده":"نیازمند اجازه"}</span></div><button className="primary-btn compact" onClick={askNotifications}>{notifications?"بررسی مجدد":"فعال‌سازی"}</button></div>
-              <div className="settings-row"><div className="settings-icon"><AlarmClock size={20}/></div><div className="settings-copy"><strong>آزمایش اعلان</strong><p>یک اعلان آزمایشی روی همین دستگاه نمایش بده.</p></div><button className="secondary-btn compact" onClick={testNotification}>ارسال آزمایشی</button></div>
-              <div className="settings-note"><CircleAlert size={17}/><span>یادآوری واقعی در زمان تعیین‌شده به بک‌اند، پایگاه داده و سرویس زمان‌بندی نیاز دارد. نسخه فعلی یک نمونه قابل اجرا با ذخیره‌سازی محلی است و اعلان زمان‌بندی‌شده در پس‌زمینه را تضمین نمی‌کند.</span></div>
+              <div className="settings-row"><div className="settings-icon"><Bell size={20}/></div><div className="settings-copy"><strong>اعلان‌های مرورگر</strong><p>برای دریافت یادآور حتی وقتی سایت بسته است، اجازه مرورگر و تنظیمات سرور لازم است.</p><span className={`permission ${permission==="granted"?"ok":""}`}>وضعیت: {permission==="granted"?"فعال":permission==="denied"?"مسدود شده":"نیازمند اجازه"}</span></div><button className="primary-btn compact" onClick={askNotifications}>{notifications?"بررسی مجدد":"فعال‌سازی"}</button></div>
+              <div className="settings-row"><div className="settings-icon"><AlarmClock size={20}/></div><div className="settings-copy"><strong>آزمایش اعلان</strong><p>نمایش یک اعلان آزمایشی روی همین دستگاه.</p></div><button className="secondary-btn compact" onClick={testNotification}>ارسال آزمایشی</button></div>
+              <div className="settings-note"><CircleAlert size={17}/><span>برای ارسال واقعی، ابتدا فایل SQL داخل پوشه supabase را در SQL Editor اجرا کن و کلیدهای Supabase و VAPID را در متغیرهای محیطی Netlify قرار بده. زمان‌بند سرور هر دقیقه یادآورها را بررسی می‌کند.</span></div>
             </div>
           </div>
         ) : (
@@ -408,7 +485,7 @@ export default function Home() {
         <label className="field-label">توضیحات <span>اختیاری</span><textarea value={form.description} onChange={e=>setForm({...form,description:e.target.value})} placeholder="جزئیات یا یادداشت کوتاه..." rows={3} maxLength={1000}/></label>
         <div className="form-two"><div className="field-label"><span>تاریخ شمسی ددلاین <b>*</b></span><div className="form-two" style={{ gap: 8, marginTop: 8 }}><select aria-label="روز شمسی" value={jalaliDay} onChange={e=>syncJalaliDate(jalaliYear,jalaliMonth,e.target.value,deadlineTime)} required>{Array.from({ length: jalaliDaysInMonth(jalaliYear, jalaliMonth) }, (_,i)=>String(i+1)).map(d=><option key={d} value={d}>{new Intl.NumberFormat("fa-IR").format(Number(d))}</option>)}</select><select aria-label="ماه شمسی" value={jalaliMonth} onChange={e=>syncJalaliDate(jalaliYear,e.target.value,jalaliDay,deadlineTime)}>{jalaliMonths.map((m,i)=><option key={m} value={String(i+1)}>{m}</option>)}</select><select aria-label="سال شمسی" value={jalaliYear} onChange={e=>syncJalaliDate(e.target.value,jalaliMonth,jalaliDay,deadlineTime)}>{Array.from({length: 11},(_,i)=>momentJalaali().jYear()-5+i).map(y=><option key={y} value={String(y)}>{new Intl.NumberFormat("fa-IR").format(y)}</option>)}</select></div><label style={{display:"block",marginTop:10}}>ساعت ددلاین<input type="time" value={deadlineTime} onChange={e=>syncJalaliDate(jalaliYear,jalaliMonth,jalaliDay,e.target.value)} required/></label></div><label className="field-label">دسته‌بندی<select value={form.category} onChange={e=>setForm({...form,category:e.target.value as Category})}>{categories.map(c=><option key={c}>{c}</option>)}</select></label></div>
         <div className="form-two"><label className="field-label">اولویت<select value={form.priority} onChange={e=>setForm({...form,priority:e.target.value as Priority})}><option value="low">کم</option><option value="medium">متوسط</option><option value="high">زیاد</option></select></label><label className="field-label">وضعیت<select value={form.status} onChange={e=>setForm({...form,status:e.target.value as Status})}><option value="todo">انجام‌نشده</option><option value="doing">در حال انجام</option><option value="done">انجام‌شده</option></select></label></div>
-        {!editing&&<div className="reminder-field"><div className="reminder-label"><Bell size={15}/> یادآورهای پیشنهادی <span>زمان‌ها نسبت به ددلاین محاسبه می‌شوند</span></div><div className="reminder-options">{[{v:"10080",l:"۱ هفته قبل"},{v:"4320",l:"۳ روز قبل"},{v:"1440",l:"۱ روز قبل"},{v:"180",l:"۳ ساعت قبل"},{v:"30",l:"۳۰ دقیقه قبل"}].map(r=><label key={r.v} className={`reminder-option ${form.reminderMins.includes(r.v)?"selected":""}`}><input type="checkbox" checked={form.reminderMins.includes(r.v)} onChange={e=>setForm({...form,reminderMins:e.target.checked?[...form.reminderMins,r.v]:form.reminderMins.filter(v=>v!==r.v)})}/>{r.l}</label>)}</div></div>}
+        <div className="reminder-field"><div className="reminder-label"><Bell size={15}/> یادآورها <span>زمان‌ها نسبت به ددلاین محاسبه می‌شوند</span></div><div className="reminder-options">{reminderChoices.map(r=><label key={r.v} className={`reminder-option ${form.reminderMins.includes(r.v)?"selected":""}`}><input type="checkbox" checked={form.reminderMins.includes(r.v)} onChange={e=>setForm({...form,reminderMins:e.target.checked?[...form.reminderMins,r.v]:form.reminderMins.filter(v=>v!==r.v)})}/>{r.l}</label>)}</div></div>
         <div className="modal-actions"><button type="button" className="secondary-btn" onClick={()=>setModalOpen(false)}>انصراف</button><button type="submit" className="primary-btn"><Check size={17}/>{editing?"ذخیره تغییرات":"ثبت کار"}</button></div>
       </form></div>}
       {toast&&<div className="toast"><CheckCircle2 size={17}/>{toast}</div>}
