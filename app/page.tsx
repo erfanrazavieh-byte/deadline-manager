@@ -471,11 +471,29 @@ const dailyVerse = dailyVerses[dailyIndex];
       const applicationServerKey = Uint8Array.from(atob(vapidPublicKey.replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0));
       const pushSubscription = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey });
       const serialized = pushSubscription.toJSON();
-      const { data: existing, error: lookupError } = await supabase.from("push_subscriptions").select("id").eq("user_id", user.id).filter("subscription->>endpoint", "eq", serialized.endpoint).maybeSingle();
+      const endpoint = serialized.endpoint;
+      const p256dh = serialized.keys?.p256dh;
+      const auth = serialized.keys?.auth;
+      if (!endpoint || !p256dh || !auth) {
+        throw new Error("اطلاعات اشتراک اعلان کامل نیست؛ اعلان را دوباره فعال کن.");
+      }
+      const { data: existing, error: lookupError } = await supabase
+        .from("push_subscriptions")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("endpoint", endpoint)
+        .maybeSingle();
       if (lookupError) throw lookupError;
+      const subscriptionData = {
+        user_id: user.id,
+        endpoint,
+        p256dh,
+        auth,
+        updated_at: new Date().toISOString(),
+      };
       const save = existing
-        ? await supabase.from("push_subscriptions").update({ subscription: serialized }).eq("id", existing.id).eq("user_id", user.id)
-        : await supabase.from("push_subscriptions").insert({ user_id: user.id, subscription: serialized });
+        ? await supabase.from("push_subscriptions").update(subscriptionData).eq("id", existing.id).eq("user_id", user.id)
+        : await supabase.from("push_subscriptions").insert(subscriptionData);
       if (save.error) throw save.error;
       setNotifications(true);
       localStorage.setItem("deadline-manager-notifications", "true");
