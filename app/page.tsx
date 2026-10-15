@@ -704,3 +704,5 @@ const dailyVerse = dailyVerses[dailyIndex];
     </main>
   );
 }
+
+// Trigger a fresh production build for the public VAPID environment variable.
