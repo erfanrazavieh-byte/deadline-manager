@@ -459,15 +459,27 @@ const dailyVerse = dailyVerses[dailyIndex];
 
   const askNotifications = async () => {
     if (!("Notification" in window)) { setToast("این مرورگر از اعلان‌های وب پشتیبانی نمی‌کند."); return; }
+    if (!user) { setToast("ابتدا وارد حساب کاربری شو."); return; }
+    const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    if (!vapidPublicKey) { setToast("کلید VAPID هنوز در تنظیمات محیطی سایت ثبت نشده است."); return; }
     try {
       const result = await Notification.requestPermission();
       setPermission(result);
       const enabled = result === "granted";
-      setNotifications(enabled);
-      localStorage.setItem("deadline-manager-notifications", String(enabled));
-      if (!enabled) { setToast("اجازه اعلان داده نشد؛ مجوز اعلان سایت را در تنظیمات مرورگر بررسی کن."); return; }
-      await getNotificationRegistration();
-      setToast("اعلان فعال شد. حالا «ارسال آزمایشی» را بزن.");
+      if (!enabled) { setNotifications(false); localStorage.setItem("deadline-manager-notifications", "false"); setToast("اجازه اعلان داده نشد؛ مجوز اعلان سایت را در تنظیمات مرورگر بررسی کن."); return; }
+      const registration = await getNotificationRegistration();
+      const applicationServerKey = Uint8Array.from(atob(vapidPublicKey.replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0));
+      const pushSubscription = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey });
+      const serialized = pushSubscription.toJSON();
+      const { data: existing, error: lookupError } = await supabase.from("push_subscriptions").select("id").eq("user_id", user.id).filter("subscription->>endpoint", "eq", serialized.endpoint).maybeSingle();
+      if (lookupError) throw lookupError;
+      const save = existing
+        ? await supabase.from("push_subscriptions").update({ subscription: serialized }).eq("id", existing.id).eq("user_id", user.id)
+        : await supabase.from("push_subscriptions").insert({ user_id: user.id, subscription: serialized });
+      if (save.error) throw save.error;
+      setNotifications(true);
+      localStorage.setItem("deadline-manager-notifications", "true");
+      setToast("اعلان‌های این دستگاه برای دریافت یادآورها فعال شد.");
     } catch (error) {
       setToast("فعال‌سازی اعلان ناموفق بود: " + (error instanceof Error ? error.message : "خطای ناشناخته"));
     }
