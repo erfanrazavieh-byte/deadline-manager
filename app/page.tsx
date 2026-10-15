@@ -471,7 +471,25 @@ const dailyVerse = dailyVerses[dailyIndex];
       const normalizedVapidKey = vapidPublicKey.replace(/-/g, "+").replace(/_/g, "/");
       const paddedVapidKey = normalizedVapidKey.padEnd(Math.ceil(normalizedVapidKey.length / 4) * 4, "=");
       const applicationServerKey = Uint8Array.from(atob(paddedVapidKey), c => c.charCodeAt(0));
-      const pushSubscription = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey });
+      // Reuse the current subscription when it already exists. Calling subscribe()
+      // again can fail in some browser push services even when push is already working.
+      let pushSubscription = await registration.pushManager.getSubscription();
+      if (pushSubscription && pushSubscription.options.applicationServerKey) {
+        const existingKey = new Uint8Array(pushSubscription.options.applicationServerKey);
+        const sameKey =
+          existingKey.length === applicationServerKey.length &&
+          existingKey.every((byte, index) => byte === applicationServerKey[index]);
+        if (!sameKey) {
+          await pushSubscription.unsubscribe();
+          pushSubscription = null;
+        }
+      }
+      if (!pushSubscription) {
+        pushSubscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey,
+        });
+      }
       const serialized = pushSubscription.toJSON();
       const endpoint = serialized.endpoint;
       const p256dh = serialized.keys?.p256dh;
