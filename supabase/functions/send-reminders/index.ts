@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
   const now = Date.now();
   const windowEnd = new Date(now + 60_000).toISOString();
   const { data: subscriptions, error: subError } = await supabase
-    .from("push_subscriptions").select("id,user_id,subscription");
+    .from("push_subscriptions").select("id,user_id,endpoint,p256dh,auth");
   if (subError) return new Response(subError.message, { status: 500, headers: corsHeaders });
 
   const { data: tasks, error: taskError } = await supabase
@@ -46,7 +46,10 @@ Deno.serve(async (req) => {
       let delivered = false;
       for (const target of targets) {
         try {
-          await webpush.sendNotification(target.subscription, JSON.stringify({
+          await webpush.sendNotification({
+            endpoint: target.endpoint,
+            keys: { p256dh: target.p256dh, auth: target.auth },
+          }, JSON.stringify({
             title: "یادآوری ددلاین",
             body: task.title,
             url: "/",
