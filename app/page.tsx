@@ -468,7 +468,9 @@ const dailyVerse = dailyVerses[dailyIndex];
       const enabled = result === "granted";
       if (!enabled) { setNotifications(false); localStorage.setItem("deadline-manager-notifications", "false"); setToast("اجازه اعلان داده نشد؛ مجوز اعلان سایت را در تنظیمات مرورگر بررسی کن."); return; }
       const registration = await getNotificationRegistration();
-      const applicationServerKey = Uint8Array.from(atob(vapidPublicKey.replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0));
+      const normalizedVapidKey = vapidPublicKey.replace(/-/g, "+").replace(/_/g, "/");
+      const paddedVapidKey = normalizedVapidKey.padEnd(Math.ceil(normalizedVapidKey.length / 4) * 4, "=");
+      const applicationServerKey = Uint8Array.from(atob(paddedVapidKey), c => c.charCodeAt(0));
       const pushSubscription = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey });
       const serialized = pushSubscription.toJSON();
       const endpoint = serialized.endpoint;
@@ -498,8 +500,9 @@ const dailyVerse = dailyVerses[dailyIndex];
       setNotifications(true);
       localStorage.setItem("deadline-manager-notifications", "true");
       setToast("اعلان‌های این دستگاه برای دریافت یادآورها فعال شد.");
-    } catch (error) {
-      setToast("فعال‌سازی اعلان ناموفق بود: " + (error instanceof Error ? error.message : "خطای ناشناخته"));
+    } catch (error: any) {
+      const detail = error?.message ? `${error?.name ? error.name + ": " : ""}${error.message}` : String(error || "خطای ناشناخته");
+      setToast("فعال‌سازی اعلان ناموفق بود: " + detail);
     }
   };
 
