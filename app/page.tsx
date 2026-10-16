@@ -35,6 +35,7 @@ type Status = "todo" | "doing" | "done";
 type Priority = "low" | "medium" | "high";
 type Category = "دانشگاه" | "کار" | "پروژه شخصی" | "زندگی";
 type Reminder = { id: string; at: string; sent?: boolean };
+type PeriodicReminder = { id: string; user_id: string; title: string; message: string; schedule_type: "interval" | "daily"; interval_minutes: number | null; daily_time: string | null; timezone: string; next_run_at: string; enabled: boolean; created_at?: string; updated_at?: string };
 type Task = {
   id: string; title: string; description: string; due: string;
   category: Category; priority: Priority; status: Status; reminders: Reminder[];
@@ -184,6 +185,16 @@ export default function Home() {
     setJalaliYear(String(m.jYear())); setJalaliMonth(String(m.jMonth() + 1)); setJalaliDay(String(m.jDate())); setDeadlineTime(m.format("HH:mm"));
   };
   const [showSettings, setShowSettings] = useState(false);
+  const [showPeriodic, setShowPeriodic] = useState(false);
+  const [periodicReminders, setPeriodicReminders] = useState<PeriodicReminder[]>([]);
+  const [periodicLoading, setPeriodicLoading] = useState(false);
+  const [periodicTitle, setPeriodicTitle] = useState("");
+  const [periodicMessage, setPeriodicMessage] = useState("");
+  const [periodicType, setPeriodicType] = useState<"interval" | "daily">("interval");
+  const [periodicHours, setPeriodicHours] = useState("1");
+  const [periodicMinutes, setPeriodicMinutes] = useState("30");
+  const [periodicDailyTime, setPeriodicDailyTime] = useState("18:30");
+  const [periodicSaving, setPeriodicSaving] = useState(false);
   const [notifications, setNotifications] = useState(false);
   const [permission, setPermission] = useState("default");
   const [toast, setToast] = useState("");
@@ -240,6 +251,20 @@ export default function Home() {
           reminders: row.reminders || [], createdAt: row.created_at
         })));
         setReady(true);
+      });
+    return () => { cancelled = true; };
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!user?.id) { setPeriodicReminders([]); setPeriodicLoading(false); return; }
+    let cancelled = false;
+    setPeriodicLoading(true);
+    supabase.from("periodic_reminders").select("*").eq("user_id", user.id).order("created_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error) setToast("بارگذاری یادآورهای دوره‌ای ناموفق بود: " + error.message);
+        else setPeriodicReminders((data || []) as PeriodicReminder[]);
+        setPeriodicLoading(false);
       });
     return () => { cancelled = true; };
   }, [user?.id]);
@@ -557,6 +582,80 @@ const dailyVerse = dailyVerses[dailyIndex];
     }
   };
 
+  const savePeriodicReminder = async (event: any) => {
+    event.preventDefault();
+    if (!user?.id) { setToast("ابتدا وارد حساب کاربری شو."); return; }
+    const title = periodicTitle.trim();
+    const message = periodicMessage.trim();
+    if (!title || !message) { setToast("عنوان و متن اعلان را وارد کن."); return; }
+    const duration = Number(periodicHours) * 60 + Number(periodicMinutes);
+    if (periodicType === "interval" && (!Number.isInteger(duration) || duration < 1 || duration > 525600)) {
+      setToast("فاصله زمانی باید بین ۱ دقیقه تا یک سال باشد."); return;
+    }
+    if (periodicType === "daily" && !/^([01]\d|2[0-3]):[0-5]\d$/.test(periodicDailyTime)) {
+      setToast("ساعت روزانه را درست انتخاب کن."); return;
+    }
+
+    const now = new Date();
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Tehran";
+    let nextRun = new Date(now.getTime() + duration * 60_000);
+    if (periodicType === "daily") {
+      const [hour, minute] = periodicDailyTime.split(":").map(Number);
+      nextRun = new Date(now);
+      nextRun.setHours(hour, minute, 0, 0);
+      if (nextRun.getTime() <= now.getTime()) nextRun.setDate(nextRun.getDate() + 1);
+    }
+
+    setPeriodicSaving(true);
+    const { data, error } = await supabase.from("periodic_reminders").insert({
+      user_id: user.id,
+      title,
+      message,
+      schedule_type: periodicType,
+      interval_minutes: periodicType === "interval" ? duration : null,
+      daily_time: periodicType === "daily" ? periodicDailyTime : null,
+      timezone,
+      next_run_at: nextRun.toISOString(),
+      enabled: true
+    }).select("*").single();
+    setPeriodicSaving(false);
+    if (error) { setToast("ثبت یادآور ناموفق بود: " + error.message); return; }
+    setPeriodicReminders(current => [data as PeriodicReminder, ...current]);
+    setPeriodicTitle("");
+    setPeriodicMessage("");
+    setToast("یادآور دوره‌ای ثبت شد.");
+  };
+
+  const togglePeriodicReminder = async (item: PeriodicReminder) => {
+    const enabled = !item.enabled;
+    let nextRun = item.next_run_at;
+    if (enabled && new Date(nextRun).getTime() <= Date.now()) {
+      const now = new Date();
+      if (item.schedule_type === "interval") {
+        nextRun = new Date(now.getTime() + Math.max(1, item.interval_minutes || 1) * 60_000).toISOString();
+      } else if (item.daily_time) {
+        const [hour, minute] = item.daily_time.slice(0, 5).split(":").map(Number);
+        const candidate = new Date(now);
+        candidate.setHours(hour, minute, 0, 0);
+        if (candidate.getTime() <= now.getTime()) candidate.setDate(candidate.getDate() + 1);
+        nextRun = candidate.toISOString();
+      }
+    }
+    const { data, error } = await supabase.from("periodic_reminders")
+      .update({ enabled, next_run_at: nextRun, updated_at: new Date().toISOString() })
+      .eq("id", item.id).eq("user_id", user?.id).select("*").single();
+    if (error) { setToast("تغییر وضعیت یادآور ناموفق بود: " + error.message); return; }
+    setPeriodicReminders(current => current.map(row => row.id === item.id ? data as PeriodicReminder : row));
+    setToast(enabled ? "یادآور فعال شد." : "یادآور غیرفعال شد.");
+  };
+
+  const deletePeriodicReminder = async (item: PeriodicReminder) => {
+    const { error } = await supabase.from("periodic_reminders").delete().eq("id", item.id).eq("user_id", user?.id);
+    if (error) { setToast("حذف یادآور ناموفق بود: " + error.message); return; }
+    setPeriodicReminders(current => current.filter(row => row.id !== item.id));
+    setToast("یادآور حذف شد.");
+  };
+
   const navItems = [
     { name: "نمای کلی", icon: LayoutDashboard },
     { name: "همه کارها", icon: ListTodo, count: activeTasks.length },
@@ -602,14 +701,15 @@ const dailyVerse = dailyVerses[dailyIndex];
         <nav className="nav-list">
           {navItems.map(item => {
             const Icon = item.icon;
-            return <button key={item.name} className={`nav-item ${activeNav===item.name?"active":""}`} onClick={()=>{setActiveNav(item.name);setShowSettings(false);setMobileMenu(false);}}>
+            return <button key={item.name} className={`nav-item ${activeNav===item.name && !showPeriodic && !showSettings?"active":""}`} onClick={()=>{setActiveNav(item.name);setShowSettings(false);setShowPeriodic(false);setMobileMenu(false);}}>
               <Icon size={18}/><span>{item.name}</span>{item.count !== undefined && <small>{item.count}</small>}
             </button>;
           })}
+          <button className={`nav-item ${showPeriodic?"active":""}`} onClick={()=>{setShowPeriodic(true);setShowSettings(false);setMobileMenu(false);}}><Clock3 size={18}/><span>یادآورهای دوره‌ای</span></button>
         </nav>
         <div className="sidebar-bottom">
           <button className="nav-item theme-toggle" onClick={toggleTheme} aria-label="تغییر حالت روشن و تاریک"><span className="theme-toggle-icon">{theme === "dark" || (theme === "system" && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches) ? <Sun size={18}/> : <Moon size={18}/>}</span><span>{theme === "dark" || (theme === "system" && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "حالت روز" : "حالت شب"}</span></button>
-          <button className={`nav-item ${showSettings?"active":""}`} onClick={()=>{setShowSettings(!showSettings);setMobileMenu(false);}}><Settings2 size={18}/><span>تنظیمات</span></button>
+          <button className={`nav-item ${showSettings?"active":""}`} onClick={()=>{setShowSettings(!showSettings);setShowPeriodic(false);setMobileMenu(false);}}><Settings2 size={18}/><span>تنظیمات</span></button>
           <div className="profile-row"><div className="avatar">ا</div><div className="profile-text"><strong>فضای شخصی</strong><span>{user.email || "حساب کاربری"}</span></div><MoreHorizontal size={19} className="muted"/></div>
         </div>
       </aside>
@@ -618,14 +718,57 @@ const dailyVerse = dailyVerses[dailyIndex];
       <section className="main-panel">
         <header className="topbar">
           <button className="icon-btn menu-trigger" onClick={()=>setMobileMenu(true)} aria-label="منو"><Menu size={20}/></button>
-          <div className="breadcrumbs">فضای کاری <ChevronLeft size={14}/> <strong>{showSettings?"تنظیمات":activeNav}</strong></div>
+          <div className="breadcrumbs">فضای کاری <ChevronLeft size={14}/> <strong>{showPeriodic?"یادآورهای دوره‌ای":showSettings?"تنظیمات":activeNav}</strong></div>
           <div className="top-actions">
             <div className="date-chip"><CalendarDays size={15}/>{faDate(new Date(), { weekday:"long", year:"numeric" })}</div><button className="secondary-btn compact" onClick={signOut} title={user.email || "خروج از حساب"}>خروج</button>
-            <button className={`icon-btn notification-btn ${notifications?"notification-on":""}`} onClick={()=>setShowSettings(!showSettings)} aria-label="تنظیمات اعلان"><Bell size={18}/><i/></button>
+            <button className={`icon-btn notification-btn ${notifications?"notification-on":""}`} onClick={()=>{setShowSettings(!showSettings);setShowPeriodic(false);}} aria-label="تنظیمات اعلان"><Bell size={18}/><i/></button>
           </div>
         </header>
 
-        {showSettings ? (
+        {showPeriodic ? (
+          <div className="content settings-content">
+            <div className="page-heading"><div><div className="eyebrow">برنامه‌ریزی اعلان‌ها</div><h1>یادآورهای دوره‌ای</h1><p>اعلان تکرارشونده بساز؛ حتی وقتی سایت بسته است.</p></div></div>
+            <div className="settings-card" style={{ padding: 22 }}>
+              <form onSubmit={savePeriodicReminder} style={{ display: "grid", gap: 16 }}>
+                <label className="field-label">عنوان یادآور <b>*</b><input value={periodicTitle} onChange={e=>setPeriodicTitle(e.target.value)} placeholder="مثلاً زمان استراحت" maxLength={100} required /></label>
+                <label className="field-label">متن اعلان <b>*</b><textarea value={periodicMessage} onChange={e=>setPeriodicMessage(e.target.value)} placeholder="متنی که می‌خواهی در اعلان نمایش داده شود..." rows={3} maxLength={500} required /></label>
+                <label className="field-label">نوع زمان‌بندی<select value={periodicType} onChange={e=>setPeriodicType(e.target.value as "interval" | "daily")}><option value="interval">تکرار با فاصله زمانی</option><option value="daily">هر روز در ساعت مشخص</option></select></label>
+                {periodicType === "interval" ? (
+                  <div className="form-two">
+                    <label className="field-label">ساعت<input type="number" min="0" max="8760" value={periodicHours} onChange={e=>setPeriodicHours(e.target.value)} required /></label>
+                    <label className="field-label">دقیقه<input type="number" min="0" max="59" value={periodicMinutes} onChange={e=>setPeriodicMinutes(e.target.value)} required /></label>
+                    <p style={{ gridColumn: "1 / -1", margin: 0, color: "var(--muted, #777)", fontSize: 13 }}>مثلاً ۱ ساعت و ۳۰ دقیقه یعنی هر ۹۰ دقیقه یک اعلان.</p>
+                  </div>
+                ) : (
+                  <div className="form-two">
+                    <label className="field-label">ساعت ارسال<input type="time" value={periodicDailyTime} onChange={e=>setPeriodicDailyTime(e.target.value)} required /></label>
+                    <p style={{ margin: 0, color: "var(--muted, #777)", fontSize: 13, alignSelf: "center" }}>بر اساس ساعت محلی دستگاه هنگام ساخت یادآور.</p>
+                  </div>
+                )}
+                <div style={{ display: "flex", justifyContent: "flex-start" }}><button type="submit" className="primary-btn" disabled={periodicSaving}><Plus size={17}/>{periodicSaving ? "در حال ثبت..." : "ثبت یادآور"}</button></div>
+              </form>
+            </div>
+            <div className="settings-card" style={{ padding: 22, marginTop: 18 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, marginBottom: 14 }}><h2 style={{ margin: 0, fontSize: 18 }}>یادآورهای ثبت‌شده</h2><span>{periodicReminders.length.toLocaleString("fa-IR")}</span></div>
+              {periodicLoading ? <p>در حال بارگذاری...</p> : periodicReminders.length === 0 ? <p style={{ color: "var(--muted, #777)" }}>هنوز یادآور دوره‌ای نساخته‌ای.</p> : periodicReminders.map(item => (
+                <div key={item.id} className="settings-row" style={{ alignItems: "flex-start", gap: 12 }}>
+                  <div className="settings-icon"><Clock3 size={19}/></div>
+                  <div className="settings-copy" style={{ minWidth: 0, flex: 1 }}>
+                    <strong>{item.title}</strong>
+                    <p style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{item.message}</p>
+                    <p>{item.schedule_type === "interval" ? `هر ${Math.floor((item.interval_minutes || 0) / 60) ? `${Math.floor((item.interval_minutes || 0) / 60)} ساعت و ` : ""}${(item.interval_minutes || 0) % 60 || (item.interval_minutes || 0) < 60 ? (item.interval_minutes || 0) % 60 : 0} دقیقه` : `هر روز ساعت ${(item.daily_time || "").slice(0, 5)}`}</p>
+                    <span className={`permission ${item.enabled ? "ok" : ""}`}>{item.enabled ? "فعال" : "غیرفعال"} · نوبت بعدی: {faDateTime(item.next_run_at)}</span>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <button type="button" className="secondary-btn compact" onClick={()=>togglePeriodicReminder(item)}>{item.enabled ? "غیرفعال" : "فعال‌سازی"}</button>
+                    <button type="button" className="secondary-btn compact" onClick={()=>deletePeriodicReminder(item)}><Trash2 size={14}/> حذف</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p style={{ fontSize: 13, color: "var(--muted, #777)", marginTop: 12 }}>برای دریافت اعلان، یک‌بار از بخش تنظیمات، اعلان‌های این دستگاه را فعال کن.</p>
+          </div>
+        ) : showSettings ? (
           <div className="content settings-content">
             <div className="page-heading"><div><div className="eyebrow">شخصی‌سازی</div><h1>تنظیمات</h1><p>تنظیم تجربه کار با ددلاین</p></div></div>
             <div className="settings-card">
@@ -673,7 +816,7 @@ const dailyVerse = dailyVerses[dailyIndex];
                     })
                   }
                 </div>
-                {activeNav==="نمای کلی"&&<button className="view-all-button" onClick={()=>setActiveNav("همه کارها")}>مشاهده تمام کارها <ChevronLeft size={16}/></button>}
+                {activeNav==="نمای کلی"&&<button className="view-all-button" onClick={()=>{setActiveNav("همه کارها");setShowPeriodic(false);setShowSettings(false);}}>مشاهده تمام کارها <ChevronLeft size={16}/></button>}
               </div>
 
               <aside className="right-column">
@@ -721,7 +864,7 @@ const dailyVerse = dailyVerses[dailyIndex];
         <div className="modal-actions"><button type="button" className="secondary-btn" onClick={()=>setModalOpen(false)}>انصراف</button><button type="submit" className="primary-btn"><Check size={17}/>{editing?"ذخیره تغییرات":"ثبت کار"}</button></div>
       </form></div>}
       {toast&&<div className="toast"><CheckCircle2 size={17}/>{toast}</div>}
-      <div className="mobile-bottom"><button onClick={()=>{setActiveNav("نمای کلی");setShowSettings(false);}} className={activeNav==="نمای کلی"?"selected":""}><LayoutDashboard size={19}/><span>نمای کلی</span></button><button onClick={()=>setActiveNav("همه کارها")} className={activeNav==="همه کارها"?"selected":""}><ListTodo size={19}/><span>کارها</span></button><button onClick={openNew}><Plus size={22}/><span>کار جدید</span></button><button onClick={()=>setShowSettings(true)}><Settings2 size={19}/><span>تنظیمات</span></button></div>
+      <div className="mobile-bottom"><button onClick={()=>{setActiveNav("نمای کلی");setShowSettings(false);setShowPeriodic(false);}} className={activeNav==="نمای کلی"?"selected":""}><LayoutDashboard size={19}/><span>نمای کلی</span></button><button onClick={()=>setActiveNav("همه کارها")} className={activeNav==="همه کارها"?"selected":""}><ListTodo size={19}/><span>کارها</span></button><button onClick={openNew}><Plus size={22}/><span>کار جدید</span></button><button onClick={()=>{setShowSettings(true);setShowPeriodic(false);}}><Settings2 size={19}/><span>تنظیمات</span></button></div>
     </main>
   );
 }
