@@ -1,3 +1,4 @@
+// Periodic reminder support is included in this function.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import webpush from "npm:web-push";
 
