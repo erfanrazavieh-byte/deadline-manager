@@ -670,7 +670,8 @@ const dailyVerse = dailyVerses[dailyIndex];
   const calendarJMonth = calendarJalali.jMonth() + 1;
   const monthDays = jalaliDaysInMonth(calendarJYear, calendarJMonth);
   const monthOffset = (momentJalaali(`${calendarJYear}/${calendarJMonth}/1`, "jYYYY/jM/jD").day() + 1) % 7;
-  const taskDaySet = new Set(tasks.map(t => {
+  // فقط کارهای انجام‌نشده روی تقویم نشانگر داشته باشند.
+  const taskDaySet = new Set(tasks.filter(t => t.status !== "done").map(t => {
     const d = momentJalaali(t.due);
     return `${d.jYear()}-${d.jMonth() + 1}-${d.jDate()}`;
   }));
