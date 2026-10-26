@@ -121,9 +121,9 @@ const timeLeft = (value: string, now: number = Date.now()) => {
   const hours = Math.floor((totalSeconds % 86400) / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
-  const pad = (n: number) => String(n).padStart(2, "0").replace(/[0-9]/g, (digit) => "۰۱۲۳۴۵۶۷۸۹"[Number(digit)]);
+  const pad = (n: number) => String(n).padStart(2, "0");
   const countdown = days > 0
-    ? `${days.toLocaleString("fa-IR")} روز ${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
+    ? `${days.toLocaleString("en-US")} روز ${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
     : `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
   return delta < 0 ? `${countdown} تأخیر` : countdown;
 };
