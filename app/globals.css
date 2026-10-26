@@ -691,3 +691,44 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .date-picker-wrap .date-picker-side label {
   grid-column: 1 / -1;
 }
+
+
+/* Countdown readability: modern Latin numerals and clearer hierarchy. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap');
+.time-left,
+.next-stat .stat-foot {
+  font-family: "Inter", "Vazirmatn", Arial, sans-serif;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+.time-left {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  font-size: clamp(16px, 1.3vw, 20px) !important;
+  font-weight: 700 !important;
+  line-height: 1.55;
+  letter-spacing: -0.025em;
+  overflow-wrap: anywhere;
+}
+.next-stat .stat-foot {
+  font-size: clamp(15px, 1.15vw, 18px) !important;
+  font-weight: 650;
+  line-height: 1.6;
+  letter-spacing: -0.02em;
+}
+.upcoming-item small {
+  font-family: "Inter", "Vazirmatn", Arial, sans-serif;
+  font-size: 14px !important;
+  font-weight: 650;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  letter-spacing: -0.02em;
+}
+@media (max-width: 700px) {
+  .time-left { font-size: 16px !important; }
+  .next-stat .stat-foot { font-size: 15px !important; }
+  .upcoming-item small { font-size: 13px !important; }
+}
