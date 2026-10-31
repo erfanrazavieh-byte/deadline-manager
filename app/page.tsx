@@ -6,7 +6,7 @@ import {
   AlarmClock, ArrowDownWideNarrow, Bell, CalendarDays, Check, CheckCheck, Sun, Moon, KeyRound,
   ChevronDown, Circle, Clock3, LayoutDashboard, ListTodo, MoreHorizontal,
   Plus, Search, Settings2, SlidersHorizontal, Trash2, X, Pencil, ChevronLeft,
-  ChevronRight, CalendarClock, CircleAlert, Menu, CheckCircle2, XCircle, ShieldCheck
+  ChevronRight, CalendarClock, CircleAlert, Menu, CheckCircle2, XCircle
 } from "lucide-react";
 
 // تبدیل تاریخ شمسی انتخاب‌شده به رشته میلادی قابل ذخیره در دیتابیس
@@ -747,19 +747,6 @@ export default function Home() {
         </section>
         <p className="auth-footnote">اطلاعات و وظایف حساب تو به‌صورت شخصی نگهداری می‌شوند.</p>
       </form>
-      <aside className="auth-showcase" aria-label="معرفی ددلاین">
-        <div className="auth-showcase-top"><span className="auth-showcase-kicker">برنامه‌ریزی، شفاف و ساده</span><span className="auth-showcase-orbit"><AlarmClock size={19}/></span></div>
-        <div className="auth-showcase-copy"><h2>برای کارهای مهمت،<br/><span>وقت بساز.</span></h2><p>ددلاین‌ها را یک‌جا ببین، زمانت را بهتر مدیریت کن و هیچ موعد مهمی را از دست نده.</p></div>
-        <div className="auth-preview">
-          <div className="auth-preview-head"><div><span>نمایی از برنامه‌ریزی</span><strong>کارهای پیشِ رو</strong></div><span className="auth-preview-dots"><i/><i/><i/></span></div>
-          <div className="auth-preview-stat"><div><span>امروز</span><strong>برنامه‌ات را مرتب کن</strong></div><div className="auth-preview-ring"><Check size={16}/></div></div>
-          <div className="auth-preview-task"><span className="auth-preview-mark mark-violet"/><div><strong>مرور درس‌ها</strong><small>امروز · ۱۸:۰۰</small></div><span className="auth-preview-tag">دانشگاه</span></div>
-          <div className="auth-preview-task"><span className="auth-preview-mark mark-teal"/><div><strong>تکمیل پروژه</strong><small>فردا · ۱۲:۰۰</small></div><span className="auth-preview-tag">پروژه</span></div>
-          <div className="auth-preview-task"><span className="auth-preview-mark mark-amber"/><div><strong>ارسال گزارش</strong><small>۳ روز دیگر</small></div><span className="auth-preview-tag">کار</span></div>
-          <div className="auth-preview-footer"><span/><span>هر موعد، یک قدم جلوتر</span></div>
-        </div>
-        <div className="auth-showcase-bottom"><span><CheckCircle2 size={15}/> ساده و متمرکز</span><span><ShieldCheck size={15}/> فضای شخصی تو</span></div>
-      </aside>
       </div>
     </main>
   );
