@@ -631,12 +631,12 @@ export default function Home() {
       <form className="auth-card" onSubmit={submitAuth}>
         <div className="auth-brand">
           <div className="auth-brand-mark">◷</div>
-          <div><h1>ددلاین</h1><p>مدیریت زمان، ساده‌تر</p></div>
+          <div><h1>ددلاین</h1><p>مدیریت زمان</p></div>
         </div>
         <div className="auth-intro">
           <span className="auth-eyebrow">فضای شخصی برنامه‌ریزی</span>
           <h2>{authMode === "signin" ? "ورود به حساب" : "ساخت حساب کاربری"}</h2>
-          <p>ددلاین‌هایت را یک‌جا مدیریت کن و از هر دستگاه به آن‌ها دسترسی داشته باش.</p>
+          
         </div>
         <div className="auth-fields">
           <label className="auth-label">ایمیل<input className="auth-input" type="email" autoComplete="email" required value={authEmail} onChange={e => setAuthEmail(e.target.value)} placeholder="name@example.com" /></label>
