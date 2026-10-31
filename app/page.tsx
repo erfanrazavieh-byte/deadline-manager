@@ -851,7 +851,6 @@ const dailyVerse = dailyVerses[dailyIndex];
                   {activeTasks.filter(t=>new Date(t.due)>=new Date()).sort((a,b)=>+new Date(a.due)-+new Date(b.due)).slice(0,3).map((t,i)=><div className="upcoming-item" key={t.id}><div className={`upcoming-line line-${i}`}/><div><strong>{t.title}</strong><span>{faDateTime(t.due)}</span></div><small>{timeLeft(t.due, clockNow)}</small></div>)}
                   {activeTasks.filter(t=>new Date(t.due)>=new Date()).length===0&&<p className="muted empty-upcoming">ددلاین آینده‌ای ثبت نشده.</p>}
                 </div>
-                <div className="tip-card"><div><strong>بیت امروز از {dailyVerse.poet}</strong><p className="daily-verse">{dailyVerse.first}<br/>{dailyVerse.second}</p></div></div>
               </aside>
             </div>
           </div>
