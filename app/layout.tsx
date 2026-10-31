@@ -12,6 +12,9 @@ export const metadata: Metadata = {
   description:
     "با ددلاین، کارها و پروژه‌های شخصی و دانشگاهی را ثبت و اولویت‌بندی کنید، تقویم ددلاین‌ها را ببینید و برای موعد تحویل کارها یادآور تنظیم کنید. ابزار آنلاین و رایگان مدیریت وظایف.",
   applicationName: "ددلاین",
+  verification: {
+    google: "7ofPtXtdxM6vLUJ46NmNwmq8zZ1bbQa8rN5M1t1bJfE",
+  },
   keywords: [
     "مدیریت ددلاین",
     "مدیریت زمان",
