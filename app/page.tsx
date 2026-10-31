@@ -726,6 +726,28 @@ export default function Home() {
         <button className="auth-switch" type="button" onClick={() => { setAuthMode(authMode === "signin" ? "signup" : "signin"); setAuthError(""); }}>{authMode === "signin" ? "حساب نداری؟ ثبت‌نام کن" : "قبلاً حساب ساخته‌ای؟ وارد شو"}</button>
         {authMode === "signin" && <div className="auth-divider"><span>یا</span></div>}
         {authMode === "signin" && <button className="auth-guest" type="button" disabled={authBusy} onClick={signInGuest}>ورود به‌عنوان مهمان دانشگاه</button>}
+        <section className="auth-tips" aria-label="راهنمای شروع">
+          <div className="auth-tips-heading">
+            <strong>راهنمای شروع</strong>
+            <span>با امکانات ددلاین آشنا شوید</span>
+          </div>
+          <article className="auth-tip auth-tip-university">
+            <div className="auth-tip-top">
+              <span className="auth-tip-icon" aria-hidden="true"><KeyRound size={17}/></span>
+              <strong>ددلاین‌های دانشگاه</strong>
+              <span className="auth-tip-badge">همگام‌سازی خودکار</span>
+            </div>
+            <p>با وارد کردن کد مربوطه در بخش ددلاین‌های مشترک منو، ددلاین‌های دانشگاه را به‌صورت کامل به اکانت خود اضافه کنید.</p>
+          </article>
+          <article className="auth-tip auth-tip-personal">
+            <div className="auth-tip-top">
+              <span className="auth-tip-icon" aria-hidden="true"><Plus size={18}/></span>
+              <strong>اکانت شخصی</strong>
+              <span className="auth-tip-badge">امکانات بیشتر</span>
+            </div>
+            <p>با ساخت اکانت شخصی، ددلاین‌های خودتان را ثبت و مدیریت کنید و به امکانات کنترلی بیشتری دسترسی داشته باشید.</p>
+          </article>
+        </section>
         <p className="auth-footnote">اطلاعات و وظایف حساب تو به‌صورت شخصی نگهداری می‌شوند.</p>
       </form>
     </main>
