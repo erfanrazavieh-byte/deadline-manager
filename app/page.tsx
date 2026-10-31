@@ -242,8 +242,9 @@ export default function Home() {
     if (!user) { setTasks([]); setReady(true); return; }
     let cancelled = false;
     setReady(false);
-    supabase.from("tasks").select("*").eq("user_id", user.guest ? GUEST_OWNER_ID : user.id).then(query => user.guest ? query.eq("category", "دانشگاه") : query).order("due", { ascending: true })
-      .then(({ data, error }) => {
+    const taskQuery = supabase.from("tasks").select("*").eq("user_id", user.guest ? GUEST_OWNER_ID : user.id);
+    if (user.guest) taskQuery.eq("category", "دانشگاه");
+    taskQuery.order("due", { ascending: true }).then(({ data, error }) => {
         if (cancelled) return;
         if (error) setToast("بارگذاری ددلاین‌ها ناموفق بود: " + error.message);
         else setTasks((data || []).map((row: any) => ({
@@ -277,7 +278,7 @@ export default function Home() {
   }, [toast]);
 
   useEffect(() => {
-    if (!user?.id || !notifications || permission !== "granted" || !("Notification" in window)) return;
+    if (!user?.id || user.guest || !notifications || permission !== "granted" || !("Notification" in window)) return;
     let cancelled = false;
     let checking = false;
     let interval: number | undefined;
@@ -330,7 +331,7 @@ export default function Home() {
       if (interval !== undefined) window.clearInterval(interval);
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
-  }, [tasks, user?.id, notifications, permission]);
+  }, [tasks, user?.id, user?.guest, notifications, permission]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
