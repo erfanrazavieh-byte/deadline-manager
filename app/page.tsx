@@ -739,7 +739,7 @@ export default function Home() {
         <nav className="nav-list">
           {(user.guest ? navItems.filter(item => ["نمای کلی","همه کارها","امروز","۷ روز آینده","عقب‌افتاده"].includes(item.name)) : navItems).map(item => {
             const Icon = item.icon;
-            return <button key={item.name} className={`nav-item ${activeNav===item.name && !showPeriodic && !showSettings?"active":""}`} onClick={()=>{setActiveNav(item.name);setShowSettings(false);setShowPeriodic(false);setMobileMenu(false);}}>
+            return <button key={item.name} className={`nav-item ${activeNav===item.name && !showPeriodic && !showSettings?"active":""}`} onClick={()=>{setActiveNav(item.name);setShowSettings(false);setShowPeriodic(false);setShowSharedImport(false);setMobileMenu(false);}}>
               <Icon size={18}/><span>{item.name}</span>{item.count !== undefined && <small>{item.count}</small>}
             </button>;
           })}
