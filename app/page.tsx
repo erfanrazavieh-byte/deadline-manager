@@ -766,7 +766,7 @@ export default function Home() {
           <div className="content">
             {user.guest && <div className="guest-mode-banner">READ-ONLY MODE</div>}
             <div className="page-heading">
-              <div><div className="eyebrow">{activeNav==="نمای کلی"?"خلاصه فعالیت‌ها":"مدیریت وظایف"}</div><h1>{activeNav==="نمای کلی"?"نمای کلی":activeNav}</h1>{activeNav==="نمای کلی" ? <p>برنامه امروزت را مرتب کن و با تمرکز جلو برو.</p> : activeNav==="همه کارها" ? <p>ددلاین ثبت کن و اعلان یادآوری دریافت کن</p> : null}</div>
+              <div><div className="eyebrow">{activeNav==="نمای کلی"?"خلاصه فعالیت‌ها":"مدیریت وظایف"}</div><h1>{activeNav==="نمای کلی"?"نمای کلی":activeNav}</h1>{activeNav==="نمای کلی" ? <p>برنامه امروزت را مرتب کن و با تمرکز جلو برو.</p> : activeNav==="همه کارها" ? <p>ددلاین ثبت کن و اعلان یادآور دریافت کن</p> : null}</div>
               {!user.guest && <button className="primary-btn" onClick={openNew}><Plus size={18}/> کار جدید</button>}
             </div>
 
