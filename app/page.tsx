@@ -140,6 +140,7 @@ export default function Home() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [theme, setTheme] = useState<"system" | "light" | "dark">("system");
   const [calendarMonth, setCalendarMonth] = useState(new Date());
+  const [selectedCalendarDay, setSelectedCalendarDay] = useState<string | null>(null);
   const [user, setUser] = useState<{ id: string; email?: string; guest?: boolean } | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
@@ -648,6 +649,15 @@ export default function Home() {
     counts.set(key, (counts.get(key) || 0) + 1);
     return counts;
   }, new Map<string, number>());
+  const selectedCalendarTasks = selectedCalendarDay
+    ? tasks.filter(task => {
+        const d = momentJalaali(task.due);
+        return `${d.jYear()}-${d.jMonth() + 1}-${d.jDate()}` === selectedCalendarDay;
+      }).sort((a, b) => +new Date(a.due) - +new Date(b.due))
+    : [];
+  const selectedCalendarLabel = selectedCalendarDay
+    ? momentJalaali(selectedCalendarDay, "jYYYY-jM-jD").format("jD jMMMM jYYYY")
+    : "";
 
   if (authLoading) return <main className="auth-page" dir="rtl"><div className="auth-loading">در حال بررسی حساب کاربری…</div></main>;
 
@@ -815,10 +825,11 @@ export default function Home() {
                       const todayJalali = momentJalaali();
                       const isToday = todayJalali.jDate()===day && todayJalali.jMonth()+1===calendarJMonth && todayJalali.jYear()===calendarJYear;
                       const deadlineCount = taskDayCounts.get(key) || 0;
-                       return <button key={day} className={`calendar-day ${isToday?"today":""} ${deadlineCount>0?"has-task":""}`} onClick={()=>{setActiveNav("همه کارها");setQuery("");}}>{day.toLocaleString("fa-IR")}{deadlineCount>0&&<span className="calendar-dots" aria-label={`${deadlineCount} ددلاین`}>{Array.from({length:deadlineCount},(_,dotIndex)=><i key={dotIndex}/>)}</span>}</button>;
+                       return <button key={day} className={`calendar-day ${isToday?"today":""} ${deadlineCount>0?"has-task":""} ${selectedCalendarDay===key?"selected":""}`} onClick={()=>setSelectedCalendarDay(key)} aria-pressed={selectedCalendarDay===key}>{day.toLocaleString("fa-IR")}{deadlineCount>0&&<span className="calendar-dots" aria-label={`${deadlineCount} ددلاین`}>{Array.from({length:deadlineCount},(_,dotIndex)=><i key={dotIndex}/>)}</span>}</button>;
                     })}
                   </div>
                   <div className="calendar-legend"><span><i className="legend-dot"/> دارای ددلاین</span><span><i className="legend-today"/> امروز</span></div>
+                  {selectedCalendarDay&&<div className="calendar-day-details" aria-live="polite"><div className="calendar-day-details-head"><strong>ددلاین‌های {selectedCalendarLabel}</strong><span>{selectedCalendarTasks.length.toLocaleString("fa-IR")} مورد</span></div>{selectedCalendarTasks.length>0?<div className="calendar-day-task-list">{selectedCalendarTasks.map(task=><div className={`calendar-day-task ${task.status==="done"?"is-done":""}`} key={task.id}><span className="calendar-task-status">{task.status==="done"?"✓":"•"}</span><div className="calendar-task-copy"><strong>{task.title}</strong><span>{task.category} · {faDateTime(task.due).split("،").slice(-1)[0]}</span></div><span className="calendar-task-state">{task.status==="done"?"انجام‌شده":task.status==="doing"?"در حال انجام":"انجام‌نشده"}</span></div>)}</div>:<p className="calendar-day-empty">برای این تاریخ ددلاینی ثبت نشده است.</p>}</div>}
                 </div>
                 <div className="upcoming-card"><div className="upcoming-head"><h2>در یک نگاه</h2><span className="upcoming-icon"><AlarmClock size={17}/></span></div>
                   {activeTasks.filter(t=>new Date(t.due)>=new Date()).sort((a,b)=>+new Date(a.due)-+new Date(b.due)).slice(0,3).map((t,i)=><div className="upcoming-item" key={t.id}><div className={`upcoming-line line-${i}`}/><div><strong>{t.title}</strong><span>{faDateTime(t.due)}</span></div><small>{timeLeft(t.due, clockNow)}</small></div>)}
