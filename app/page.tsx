@@ -6,7 +6,7 @@ import {
   AlarmClock, ArrowDownWideNarrow, Bell, CalendarDays, Check, CheckCheck, Sun, Moon, KeyRound,
   ChevronDown, Circle, Clock3, LayoutDashboard, ListTodo, MoreHorizontal,
   Plus, Search, Settings2, SlidersHorizontal, Trash2, X, Pencil, ChevronLeft,
-  ChevronRight, CalendarClock, CircleAlert, Menu, CheckCircle2, XCircle
+  ChevronRight, CalendarClock, CircleAlert, Menu, CheckCircle2, XCircle, ShieldCheck
 } from "lucide-react";
 
 // تبدیل تاریخ شمسی انتخاب‌شده به رشته میلادی قابل ذخیره در دیتابیس
