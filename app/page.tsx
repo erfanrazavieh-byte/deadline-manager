@@ -70,7 +70,7 @@ const timeLeft = (value: string, now: number = Date.now()) => {
 const emptyForm = () => ({
   title: "", description: "", due: "", category: "دانشگاه" as Category,
   priority: "medium" as Priority, status: "todo" as Status,
-  reminderMins: ["5"] as string[]
+  reminderMins: ["1440"] as string[]
 });
 
 export default function Home() {
@@ -330,7 +330,7 @@ export default function Home() {
     const due = now.format("YYYY-MM-DDTHH:mm");
     setEditing(null); setForm({ ...emptyForm(), due }); prepareJalaliFields(due); setModalOpen(true);
   };
-  const reminderChoices = [{v:"10080",l:"۱ هفته قبل"},{v:"4320",l:"۳ روز قبل"},{v:"1440",l:"۱ روز قبل"},{v:"180",l:"۳ ساعت قبل"},{v:"30",l:"۳۰ دقیقه قبل"},{v:"5",l:"۵ دقیقه قبل"},{v:"1",l:"۱ دقیقه قبل"}];
+  const reminderChoices = [{v:"20160",l:"دو هفته قبل"},{v:"10080",l:"۱ هفته قبل"},{v:"4320",l:"۳ روز قبل"},{v:"2880",l:"۲ روز قبل"},{v:"1440",l:"۱ روز قبل"},{v:"180",l:"۳ ساعت قبل"}];
   const openEdit = (task: Task) => {
     const offsets = (task.reminders || []).map(r => Math.round((new Date(task.due).getTime() - new Date(r.at).getTime()) / 60000));
     const reminderMins = reminderChoices
