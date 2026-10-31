@@ -31,6 +31,7 @@ const toJalaliParts = (value: string) => {
 const fromJalaliParts = (year: string, month: string, day: string, time: string) =>
   momentJalaali(`${year}/${month}/${day} ${time || "23:59"}`, "jYYYY/jM/jD HH:mm").format("YYYY-MM-DDTHH:mm");
 
+const GUEST_OWNER_ID = "4b6ecd57-26b8-464f-bd24-dcda12ce4356";
 type Status = "todo" | "doing" | "done";
 type Priority = "low" | "medium" | "high";
 type Category = "دانشگاه" | "کار" | "پروژه شخصی" | "زندگی";
@@ -201,7 +202,7 @@ export default function Home() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [theme, setTheme] = useState<"system" | "light" | "dark">("system");
   const [calendarMonth, setCalendarMonth] = useState(new Date());
-  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
+  const [user, setUser] = useState<{ id: string; email?: string; guest?: boolean } | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
   const [authEmail, setAuthEmail] = useState("");
@@ -227,11 +228,11 @@ export default function Home() {
     if ("Notification" in window) setPermission(Notification.permission);
     supabase.auth.getSession().then(({ data, error }) => {
       if (error) setAuthError("برقراری ارتباط با حساب کاربری ممکن نشد.");
-      setUser(data.session?.user ? { id: data.session.user.id, email: data.session.user.email } : null);
+      setUser(data.session?.user ? { id: data.session.user.id, email: data.session.user.email, guest: data.session.user.is_anonymous === true || data.session.user.app_metadata?.provider === "anonymous" } : null);
       setAuthLoading(false);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ? { id: session.user.id, email: session.user.email } : null);
+      setUser(session?.user ? { id: session.user.id, email: session.user.email, guest: session.user.is_anonymous === true || session.user.app_metadata?.provider === "anonymous" } : null);
       setAuthLoading(false);
     });
     return () => subscription.unsubscribe();
@@ -241,7 +242,7 @@ export default function Home() {
     if (!user) { setTasks([]); setReady(true); return; }
     let cancelled = false;
     setReady(false);
-    supabase.from("tasks").select("*").eq("user_id", user.id).order("due", { ascending: true })
+    supabase.from("tasks").select("*").eq("user_id", user.guest ? GUEST_OWNER_ID : user.id).then(query => user.guest ? query.eq("category", "دانشگاه") : query).order("due", { ascending: true })
       .then(({ data, error }) => {
         if (cancelled) return;
         if (error) setToast("بارگذاری ددلاین‌ها ناموفق بود: " + error.message);
@@ -256,7 +257,7 @@ export default function Home() {
   }, [user?.id]);
 
   useEffect(() => {
-    if (!user?.id) { setPeriodicReminders([]); setPeriodicLoading(false); return; }
+    if (!user?.id || user.guest) { setPeriodicReminders([]); setPeriodicLoading(false); return; }
     let cancelled = false;
     setPeriodicLoading(true);
     supabase.from("periodic_reminders").select("*").eq("user_id", user.id).order("created_at", { ascending: false })
@@ -408,7 +409,7 @@ const dailyVerse = dailyVerses[dailyIndex];
   };
   const saveTask = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) { setToast("ابتدا وارد حساب کاربری شو."); return; }
+    if (!user || user.guest) { setToast("در حالت مهمان امکان تغییر ددلاین وجود ندارد."); return; }
     if (!form.title.trim() || !form.due) { setToast("عنوان و زمان ددلاین را وارد کن."); return; }
     if (new Date(form.due).getTime() <= 0) { setToast("زمان ددلاین معتبر نیست."); return; }
     if (!ready) { setToast("لطفاً تا پایان بارگذاری صبر کن."); return; }
@@ -441,19 +442,26 @@ const dailyVerse = dailyVerses[dailyIndex];
     setModalOpen(false);
   };
   const deleteTask = async (task: Task) => {
-    if (!user || !window.confirm(`کار «${task.title}» حذف شود؟`)) return;
+    if (!user || user.guest || !window.confirm(`کار «${task.title}» حذف شود؟`)) return;
     const { error } = await supabase.from("tasks").delete().eq("id", task.id).eq("user_id", user.id);
     if (error) { setToast("حذف کار ناموفق بود: " + error.message); return; }
     setTasks(old => old.filter(t => t.id !== task.id));
     setToast("کار حذف شد.");
   };
   const toggleDone = async (task: Task) => {
-    if (!user) return;
+    if (!user || user.guest) return;
     const status = task.status === "done" ? "todo" : "done";
     const { error } = await supabase.from("tasks").update({ status }).eq("id", task.id).eq("user_id", user.id);
     if (error) { setToast("تغییر وضعیت ناموفق بود: " + error.message); return; }
     setTasks(old => old.map(t => t.id === task.id ? { ...t, status } : t));
   };
+  const signInGuest = async () => {
+    setAuthBusy(true); setAuthError("");
+    const { error } = await supabase.auth.signInAnonymously();
+    if (error) setAuthError("ورود مهمان انجام نشد: " + error.message);
+    setAuthBusy(false);
+  };
+
   const submitAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(""); setAuthBusy(true);
@@ -531,6 +539,7 @@ const dailyVerse = dailyVerses[dailyIndex];
       if (lookupError) throw lookupError;
       const subscriptionData = {
         user_id: user.id,
+        guest_for_user_id: user.guest ? GUEST_OWNER_ID : null,
         endpoint,
         p256dh,
         auth,
@@ -551,6 +560,7 @@ const dailyVerse = dailyVerses[dailyIndex];
 
 
   const shiftTaskDue = async (task: Task, days: number) => {
+    if (!user || user.guest) return;
     const due = new Date(task.due);
     due.setDate(due.getDate() + days);
     const nextDue = due.toISOString();
@@ -689,6 +699,7 @@ const dailyVerse = dailyVerses[dailyIndex];
         {authError && <p role="alert" style={{ background: "#fff0f0", color: "#a82d36", padding: 12, borderRadius: 10, fontSize: 13, lineHeight: 1.7 }}>{authError}</p>}
         <button type="submit" disabled={authBusy} style={{ width: "100%", padding: 13, border: 0, borderRadius: 10, background: "#6258d5", color: "white", font: "inherit", fontWeight: 700, cursor: "pointer", marginTop: 8 }}>{authBusy ? "لطفاً صبر کن…" : authMode === "signin" ? "ورود" : "ثبت‌نام"}</button>
         <button type="button" onClick={() => { setAuthMode(authMode === "signin" ? "signup" : "signin"); setAuthError(""); }} style={{ width: "100%", marginTop: 14, padding: 10, border: 0, background: "transparent", color: "#5d54c6", font: "inherit", cursor: "pointer" }}>{authMode === "signin" ? "حساب نداری؟ ثبت‌نام کن" : "قبلاً حساب ساخته‌ای؟ وارد شو"}</button>
+        {authMode === "signin" && <button type="button" disabled={authBusy} onClick={signInGuest} style={{ width: "100%", marginTop: 8, padding: 12, border: "1px solid #dfe2ed", borderRadius: 10, background: "#f8f9ff", color: "#454b67", font: "inherit", fontWeight: 700, cursor: "pointer" }}>ورود به‌عنوان مهمان دانشگاه</button>}
       </form>
     </main>
   );
@@ -697,21 +708,21 @@ const dailyVerse = dailyVerses[dailyIndex];
     <main className="app-shell">
       <aside className={`sidebar ${mobileMenu ? "sidebar-open" : ""}`}>
         <div className="brand"><div className="brand-mark"><AlarmClock size={22}/></div><div><strong>ددلاین</strong><span>مدیریت زمان، ساده‌تر</span></div><button className="mobile-close icon-btn" onClick={()=>setMobileMenu(false)} aria-label="بستن"><X size={18}/></button></div>
-        <button className="add-task-button" onClick={()=>{setShowSettings(false);openNew();}}><Plus size={18}/> ایجاد کار جدید <span>⌘ K</span></button>
+        {!user.guest && <button className="add-task-button" onClick={()=>{setShowSettings(false);openNew();}}><Plus size={18}/> ایجاد کار جدید <span>⌘ K</span></button>}{user.guest && <div className="nav-caption">حالت مشاهده مهمان</div>}
         <div className="nav-caption">فضای کاری</div>
         <nav className="nav-list">
-          {navItems.map(item => {
+          {(user.guest ? navItems.filter(item => ["نمای کلی","همه کارها","امروز","۷ روز آینده","عقب‌افتاده","انجام‌شده"].includes(item.name)) : navItems).map(item => {
             const Icon = item.icon;
             return <button key={item.name} className={`nav-item ${activeNav===item.name && !showPeriodic && !showSettings?"active":""}`} onClick={()=>{setActiveNav(item.name);setShowSettings(false);setShowPeriodic(false);setMobileMenu(false);}}>
               <Icon size={18}/><span>{item.name}</span>{item.count !== undefined && <small>{item.count}</small>}
             </button>;
           })}
-          <button className={`nav-item ${showPeriodic?"active":""}`} onClick={()=>{setShowPeriodic(true);setShowSettings(false);setMobileMenu(false);}}><Clock3 size={18}/><span>یادآورهای دوره‌ای</span></button>
+          {!user.guest && <button className={`nav-item ${showPeriodic?"active":""}`} onClick={()=>{setShowPeriodic(true);setShowSettings(false);setMobileMenu(false);}}><Clock3 size={18}/><span>یادآورهای دوره‌ای</span></button>}
         </nav>
         <div className="sidebar-bottom">
           <button className="nav-item theme-toggle" onClick={toggleTheme} aria-label="تغییر حالت روشن و تاریک"><span className="theme-toggle-icon">{theme === "dark" || (theme === "system" && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches) ? <Sun size={18}/> : <Moon size={18}/>}</span><span>{theme === "dark" || (theme === "system" && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "حالت روز" : "حالت شب"}</span></button>
           <button className={`nav-item ${showSettings?"active":""}`} onClick={()=>{setShowSettings(!showSettings);setShowPeriodic(false);setMobileMenu(false);}}><Settings2 size={18}/><span>تنظیمات</span></button>
-          <div className="profile-row"><div className="avatar">ا</div><div className="profile-text"><strong>فضای شخصی</strong><span>{user.email || "حساب کاربری"}</span></div><MoreHorizontal size={19} className="muted"/></div>
+          <div className="profile-row"><div className="avatar">ا</div><div className="profile-text"><strong>{user.guest ? "مهمان دانشگاه" : "فضای شخصی"}</strong><span>{user.guest ? "فقط مشاهده ددلاین‌های دانشگاه" : (user.email || "حساب کاربری")}</span></div><MoreHorizontal size={19} className="muted"/></div>
         </div>
       </aside>
 
@@ -719,9 +730,9 @@ const dailyVerse = dailyVerses[dailyIndex];
       <section className="main-panel">
         <header className="topbar">
           <button className="icon-btn menu-trigger" onClick={()=>setMobileMenu(true)} aria-label="منو"><Menu size={20}/></button>
-          <div className="breadcrumbs">فضای کاری <ChevronLeft size={14}/> <strong>{showPeriodic?"یادآورهای دوره‌ای":showSettings?"تنظیمات":activeNav}</strong></div>
+          <div className="breadcrumbs">{user.guest ? "مشاهده ددلاین‌های دانشگاه" : "فضای کاری"} <ChevronLeft size={14}/> <strong>{showPeriodic?"یادآورهای دوره‌ای":showSettings?"تنظیمات":activeNav}</strong></div>
           <div className="top-actions">
-            <div className="date-chip"><CalendarDays size={15}/>{faDate(new Date(), { weekday:"long", year:"numeric" })}</div><button className="secondary-btn compact" onClick={signOut} title={user.email || "خروج از حساب"}>خروج</button>
+            <div className="date-chip"><CalendarDays size={15}/>{faDate(new Date(), { weekday:"long", year:"numeric" })}</div><button className="secondary-btn compact" onClick={signOut} title={user.guest ? "خروج از حالت مهمان" : (user.email || "خروج از حساب")}>خروج</button>
             <button className={`icon-btn notification-btn ${notifications?"notification-on":""}`} onClick={()=>{setShowSettings(!showSettings);setShowPeriodic(false);}} aria-label="تنظیمات اعلان"><Bell size={18}/><i/></button>
           </div>
         </header>
@@ -773,7 +784,7 @@ const dailyVerse = dailyVerses[dailyIndex];
           <div className="content settings-content">
             <div className="page-heading"><div><div className="eyebrow">شخصی‌سازی</div><h1>تنظیمات</h1><p>تنظیم تجربه کار با ددلاین</p></div></div>
             <div className="settings-card">
-              <div className="settings-row"><div className="settings-icon"><Bell size={20}/></div><div className="settings-copy"><strong>اعلان‌های مرورگر</strong><p>برای نمایش اعلان، اجازه مرورگر لازم است. این نسخه اعلان آزمایشی را پشتیبانی می‌کند.</p><span className={`permission ${permission==="granted"?"ok":""}`}>وضعیت: {permission==="granted"?"فعال":permission==="denied"?"مسدود شده":"نیازمند اجازه"}</span></div><button className="primary-btn compact" onClick={askNotifications}>{notifications?"بررسی مجدد":"فعال‌سازی"}</button></div>
+              <div className="settings-row"><div className="settings-icon"><Bell size={20}/></div><div className="settings-copy"><strong>اعلان‌های مرورگر</strong><p>{user.guest ? "برای دریافت یادآور ددلاین‌های دانشگاه، اعلان این دستگاه را فعال کن." : "برای نمایش اعلان، اجازه مرورگر لازم است."}</p><span className={`permission ${permission==="granted"?"ok":""}`}>وضعیت: {permission==="granted"?"فعال":permission==="denied"?"مسدود شده":"نیازمند اجازه"}</span></div><button className="primary-btn compact" onClick={askNotifications}>{notifications?"بررسی مجدد":"فعال‌سازی"}</button></div>
               <div className="settings-row"><div className="settings-icon"><AlarmClock size={20}/></div><div className="settings-copy"><strong>آزمایش اعلان</strong><p>یک اعلان آزمایشی روی همین دستگاه نمایش بده.</p></div><button className="secondary-btn compact" onClick={testNotification}>ارسال آزمایشی</button></div>
               
             </div>
@@ -782,7 +793,7 @@ const dailyVerse = dailyVerses[dailyIndex];
           <div className="content">
             <div className="page-heading">
               <div><div className="eyebrow">{activeNav==="نمای کلی"?"خلاصه فعالیت‌ها":"مدیریت وظایف"}</div><h1>{activeNav==="نمای کلی"?"نمای کلی":activeNav}</h1><p>{activeNav==="نمای کلی"?"برنامه امروزت را مرتب کن و با تمرکز جلو برو.":"همه‌چیز را مرتب نگه دار؛ یک کار در هر لحظه."}</p></div>
-              <button className="primary-btn" onClick={openNew}><Plus size={18}/> کار جدید</button>
+              {!user.guest && <button className="primary-btn" onClick={openNew}><Plus size={18}/> کار جدید</button>}{user.guest && <span className="permission ok">حالت فقط‌خواندنی</span>}
             </div>
 
             {activeNav==="نمای کلی" && <div className="stats-grid">
@@ -865,7 +876,7 @@ const dailyVerse = dailyVerses[dailyIndex];
         <div className="modal-actions"><button type="button" className="secondary-btn" onClick={()=>setModalOpen(false)}>انصراف</button><button type="submit" className="primary-btn"><Check size={17}/>{editing?"ذخیره تغییرات":"ثبت کار"}</button></div>
       </form></div>}
       {toast&&<div className="toast"><CheckCircle2 size={17}/>{toast}</div>}
-      <div className="mobile-bottom"><button onClick={()=>{setActiveNav("نمای کلی");setShowSettings(false);setShowPeriodic(false);}} className={activeNav==="نمای کلی"?"selected":""}><LayoutDashboard size={19}/><span>نمای کلی</span></button><button onClick={()=>setActiveNav("همه کارها")} className={activeNav==="همه کارها"?"selected":""}><ListTodo size={19}/><span>کارها</span></button><button onClick={openNew}><Plus size={22}/><span>کار جدید</span></button><button onClick={()=>{setShowSettings(true);setShowPeriodic(false);}}><Settings2 size={19}/><span>تنظیمات</span></button></div>
+      <div className="mobile-bottom"><button onClick={()=>{setActiveNav("نمای کلی");setShowSettings(false);setShowPeriodic(false);}} className={activeNav==="نمای کلی"?"selected":""}><LayoutDashboard size={19}/><span>نمای کلی</span></button><button onClick={()=>setActiveNav("همه کارها")} className={activeNav==="همه کارها"?"selected":""}><ListTodo size={19}/><span>کارها</span></button>{!user.guest && <button onClick={openNew}><Plus size={22}/><span>کار جدید</span></button>}<button onClick={()=>{setShowSettings(true);setShowPeriodic(false);}}><Settings2 size={19}/><span>تنظیمات</span></button></div>
     </main>
   );
 }
