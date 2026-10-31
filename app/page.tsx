@@ -242,7 +242,7 @@ export default function Home() {
     if (!user) { setTasks([]); setReady(true); return; }
     let cancelled = false;
     setReady(false);
-    const taskQuery = supabase.from("tasks").select("*").eq("user_id", user.guest ? GUEST_OWNER_ID : user.id);
+    const taskQuery = supabase.from("tasks").select("id,title,description,due,category,priority,status,reminders,created_at").eq("user_id", user.guest ? GUEST_OWNER_ID : user.id);
     if (user.guest) taskQuery.eq("category", "دانشگاه");
     taskQuery.order("due", { ascending: true }).then(({ data, error }) => {
         if (cancelled) return;
@@ -340,7 +340,7 @@ export default function Home() {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
         document.querySelector<HTMLInputElement>(".search-box input")?.focus();
-      } else if (!typing && event.key.toLowerCase() === "n" && !modalOpen && user) {
+      } else if (!typing && event.key.toLowerCase() === "n" && !modalOpen && user && !user.guest) {
         event.preventDefault();
         openNew();
       } else if (event.key === "Escape") {
