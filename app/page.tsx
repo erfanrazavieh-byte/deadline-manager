@@ -376,6 +376,7 @@ export default function Home() {
 
     const now = Date.now();
     const dueTime = new Date(form.due).getTime();
+    const dueForStorage = new Date(dueTime).toISOString();
     const reminders = form.reminderMins
       .map((minutes, index) => ({
         id: `${now}-r${index}`,
@@ -390,7 +391,7 @@ export default function Home() {
     if (editing) {
       const existing = tasks.find(t => t.id === editing);
       if (!existing) return;
-      const updated: Task = { ...existing, title: form.title.trim(), description: form.description, due: form.due, category: form.category, priority: form.priority, status: form.status, reminders };
+      const updated: Task = { ...existing, title: form.title.trim(), description: form.description, due: dueForStorage, category: form.category, priority: form.priority, status: form.status, reminders };
       const { error } = await supabase.from("tasks").update({
         title: updated.title, description: updated.description, due: updated.due,
         category: updated.category, priority: updated.priority, status: updated.status, reminders: updated.reminders
@@ -398,7 +399,7 @@ export default function Home() {
       if (error) { setToast("ذخیره تغییرات ناموفق بود: " + error.message); return; }
       setTasks(old => old.map(t => t.id === editing ? updated : t));
     } else {
-      const created: Task = { id: `${now}`, title: form.title.trim(), description: form.description, due: form.due, category: form.category, priority: form.priority, status: form.status, reminders, createdAt: new Date().toISOString() };
+      const created: Task = { id: `${now}`, title: form.title.trim(), description: form.description, due: dueForStorage, category: form.category, priority: form.priority, status: form.status, reminders, createdAt: new Date().toISOString() };
       const { error } = await supabase.from("tasks").insert({
         id: created.id, user_id: user.id, title: created.title, description: created.description,
         due: created.due, category: created.category, priority: created.priority, status: created.status,
