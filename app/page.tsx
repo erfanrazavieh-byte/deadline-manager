@@ -6,7 +6,7 @@ import {
   AlarmClock, ArrowDownWideNarrow, Bell, CalendarDays, Check, CheckCheck, Sun, Moon, KeyRound,
   ChevronDown, Circle, Clock3, LayoutDashboard, ListTodo, MoreHorizontal,
   Plus, Search, Settings2, SlidersHorizontal, Trash2, X, Pencil, ChevronLeft,
-  ChevronRight, CalendarClock, CircleAlert, Menu, CheckCircle2
+  ChevronRight, CalendarClock, CircleAlert, Menu, CheckCircle2, XCircle
 } from "lucide-react";
 
 // تبدیل تاریخ شمسی انتخاب‌شده به رشته میلادی قابل ذخیره در دیتابیس
@@ -942,7 +942,7 @@ export default function Home() {
         <div className="reminder-field"><div className="reminder-label"><Bell size={15}/> یادآورهای پیشنهادی <span>زمان‌ها نسبت به ددلاین محاسبه می‌شوند</span></div><div className="reminder-options">{reminderChoices.map(r=><label key={r.v} className={`reminder-option ${form.reminderMins.includes(r.v)?"selected":""}`}><input type="checkbox" checked={form.reminderMins.includes(r.v)} onChange={e=>setForm({...form,reminderMins:e.target.checked?[...form.reminderMins,r.v]:form.reminderMins.filter(v=>v!==r.v)})}/>{r.l}</label>)}</div></div>
         <div className="modal-actions"><button type="button" className="secondary-btn" onClick={()=>setModalOpen(false)}>انصراف</button><button type="submit" className="primary-btn"><Check size={17}/>{editing?"ذخیره تغییرات":"ثبت کار"}</button></div>
       </form></div>}
-      {toast&&<div className="toast"><CheckCircle2 size={17}/>{toast}</div>}
+      {toast&&<div className={`toast ${/معتبر نیست|ناموفق|انجام نشد|ممکن نشد|خطا/.test(toast) ? "toast-error" : ""}`}>{/معتبر نیست|ناموفق|انجام نشد|ممکن نشد|خطا/.test(toast) ? <XCircle size={17}/> : <CheckCircle2 size={17}/ >}{toast}</div>}
       <div className="mobile-bottom"><button onClick={()=>{setActiveNav("نمای کلی");setShowSettings(false);setShowPeriodic(false);}} className={activeNav==="نمای کلی"?"selected":""}><LayoutDashboard size={19}/><span>نمای کلی</span></button><button onClick={()=>setActiveNav("همه کارها")} className={activeNav==="همه کارها"?"selected":""}><ListTodo size={19}/><span>کارها</span></button>{!user.guest && <button onClick={openNew}><Plus size={22}/><span>کار جدید</span></button>}<button onClick={()=>{setShowSettings(true);setShowPeriodic(false);}}><Settings2 size={19}/><span>تنظیمات</span></button></div>
     </main>
   );
