@@ -821,3 +821,9 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 @media(prefers-color-scheme:dark){
   :root[data-theme="system"] .guest-mode-banner{background:transparent!important;border:0!important;box-shadow:none!important;color:var(--ink)!important}
 }
+
+
+/* One calendar marker per unfinished deadline on that date. */
+.calendar-day .calendar-dots{position:absolute;bottom:3px;left:3px;right:3px;display:flex;justify-content:center;align-items:center;gap:2px;pointer-events:none}
+.calendar-day .calendar-dots i{position:static;display:block;flex:0 0 4px;width:4px;height:4px;border-radius:50%;background:var(--purple)}
+.calendar-day.today .calendar-dots i{background:#fff}
