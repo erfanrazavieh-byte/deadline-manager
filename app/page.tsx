@@ -188,7 +188,7 @@ export default function Home() {
         if (error) setToast("بارگذاری ددلاین‌ها ناموفق بود: " + error.message);
         else setTasks((data || []).map((row: any) => ({
           id: row.id, title: row.title, description: row.description || "", due: row.due,
-          category: row.category, priority: row.priority, status: row.status,
+          category: row.category, priority: row.priority, status: user.guest ? "todo" : row.status,
           reminders: row.reminders || [], createdAt: row.created_at
         })));
         setReady(true);
@@ -317,7 +317,13 @@ export default function Home() {
     const currentlyDark = theme === "dark" || (theme === "system" && systemDark);
     setTheme(currentlyDark ? "light" : "dark");
   };
-  const activeTasks = tasks.filter(t => t.status !== "done");
+  // Guest mode is a read-only deadline board: ignore the owner's completion flag
+  // and hide deadlines only after they have been overdue for a full 24 hours.
+  const guestVisibleTasks = user?.guest ? tasks.filter(task => {
+    const dueTime = new Date(task.due).getTime();
+    return Number.isFinite(dueTime) && clockNow < dueTime + 24 * 60 * 60 * 1000;
+  }) : tasks;
+  const activeTasks = guestVisibleTasks.filter(t => t.status !== "done");
   const todayStart = new Date(); todayStart.setHours(0,0,0,0);
   const tomorrow = new Date(todayStart); tomorrow.setDate(tomorrow.getDate()+1);
   const todayTasks = activeTasks.filter(t => new Date(t.due) >= todayStart && new Date(t.due) < tomorrow);
@@ -325,7 +331,7 @@ export default function Home() {
   const nextTask = [...activeTasks].filter(t => new Date(t.due).getTime() >= Date.now()).sort((a,b)=>+new Date(a.due)-+new Date(b.due))[0];
 
   const visibleTasks = useMemo(() => {
-    let list = [...tasks];
+    let list = [...guestVisibleTasks];
     if (activeNav === "امروز") list = list.filter(t => new Date(t.due) >= todayStart && new Date(t.due) < tomorrow && t.status !== "done");
     if (activeNav === "۷ روز آینده") {
       const end = new Date(); end.setDate(end.getDate()+7);
@@ -643,14 +649,14 @@ export default function Home() {
   const monthDays = jalaliDaysInMonth(calendarJYear, calendarJMonth);
   const monthOffset = (momentJalaali(`${calendarJYear}/${calendarJMonth}/1`, "jYYYY/jM/jD").day() + 1) % 7;
   // برای هر ددلاینِ انجام‌نشده، یک نقطه در روز مربوط به آن نمایش داده می‌شود.
-  const taskDayCounts = tasks.filter(t => t.status !== "done").reduce((counts, task) => {
+  const taskDayCounts = guestVisibleTasks.filter(t => t.status !== "done").reduce((counts, task) => {
     const d = momentJalaali(task.due);
     const key = `${d.jYear()}-${d.jMonth() + 1}-${d.jDate()}`;
     counts.set(key, (counts.get(key) || 0) + 1);
     return counts;
   }, new Map<string, number>());
   const selectedCalendarTasks = selectedCalendarDay
-    ? tasks.filter(task => {
+    ? guestVisibleTasks.filter(task => {
         const d = momentJalaali(task.due);
         return `${d.jYear()}-${d.jMonth() + 1}-${d.jDate()}` === selectedCalendarDay;
       }).sort((a, b) => +new Date(a.due) - +new Date(b.due))
@@ -694,7 +700,7 @@ export default function Home() {
         {!user.guest && <button className="add-task-button" onClick={()=>{setShowSettings(false);openNew();}}><Plus size={18}/> ایجاد کار جدید <span>⌘ K</span></button>}{user.guest && <div className="nav-caption">حالت مشاهده مهمان</div>}
         <div className="nav-caption">فضای کاری</div>
         <nav className="nav-list">
-          {(user.guest ? navItems.filter(item => ["نمای کلی","همه کارها","امروز","۷ روز آینده","عقب‌افتاده","انجام‌شده"].includes(item.name)) : navItems).map(item => {
+          {(user.guest ? navItems.filter(item => ["نمای کلی","همه کارها","امروز","۷ روز آینده","عقب‌افتاده"].includes(item.name)) : navItems).map(item => {
             const Icon = item.icon;
             return <button key={item.name} className={`nav-item ${activeNav===item.name && !showPeriodic && !showSettings?"active":""}`} onClick={()=>{setActiveNav(item.name);setShowSettings(false);setShowPeriodic(false);setMobileMenu(false);}}>
               <Icon size={18}/><span>{item.name}</span>{item.count !== undefined && <small>{item.count}</small>}
