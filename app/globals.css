@@ -827,3 +827,24 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .calendar-day .calendar-dots{position:absolute;bottom:3px;left:3px;right:3px;display:flex;justify-content:center;align-items:center;gap:2px;pointer-events:none}
 .calendar-day .calendar-dots i{position:static;display:block;flex:0 0 4px;width:4px;height:4px;border-radius:50%;background:var(--purple)}
 .calendar-day.today .calendar-dots i{background:#fff}
+
+
+/* Selected-day deadline details in the calendar */
+.calendar-day.selected{outline:2px solid var(--purple);outline-offset:2px;background:#eeeaff!important;color:#40328f!important;font-weight:800}
+.calendar-day.today.selected{background:var(--purple)!important;color:#fff!important}
+.calendar-day-details{margin-top:14px;padding-top:13px;border-top:1px solid var(--line)}
+.calendar-day-details-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
+.calendar-day-details-head strong{font-size:11px;color:var(--ink)}
+.calendar-day-details-head>span{font-size:10px;color:var(--muted);white-space:nowrap}
+.calendar-day-task-list{display:grid;gap:7px}
+.calendar-day-task{display:flex;align-items:center;gap:8px;padding:9px 8px;border:1px solid var(--line);border-radius:9px;background:var(--surface-soft,#f8f8fc);min-width:0}
+.calendar-task-status{flex:0 0 18px;width:18px;height:18px;display:grid;place-items:center;border-radius:50%;background:#eeeaff;color:var(--purple);font-size:13px;font-weight:800}
+.calendar-task-copy{display:grid;gap:3px;min-width:0;flex:1}
+.calendar-task-copy strong{font-size:10px;color:var(--ink);overflow-wrap:anywhere}
+.calendar-task-copy span,.calendar-task-state{font-size:9px;color:var(--muted)}
+.calendar-task-state{white-space:nowrap}
+.calendar-day-task.is-done .calendar-task-copy strong{text-decoration:line-through;opacity:.65}
+.calendar-day-task.is-done .calendar-task-status{background:#e8f5ec;color:#25834b}
+.calendar-day-empty{font-size:10px;color:var(--muted);margin:0;padding:9px 2px}
+:root[data-theme="dark"] .calendar-day.selected{background:#40345f!important;color:#fff!important}
+:root[data-theme="dark"] .calendar-day-task.is-done .calendar-task-status{background:#203c2c;color:#83d6a0}
