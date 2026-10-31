@@ -622,20 +622,30 @@ export default function Home() {
     return `${d.jYear()}-${d.jMonth() + 1}-${d.jDate()}`;
   }));
 
-  if (authLoading) return <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#f7f8fc", color: "#25283b", fontFamily: "inherit" }}><p>در حال بررسی حساب کاربری…</p></main>;
+  if (authLoading) return <main className="auth-page" dir="rtl"><div className="auth-loading">در حال بررسی حساب کاربری…</div></main>;
 
   if (!user) return (
-    <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 20, background: "#f7f8fc", color: "#25283b", fontFamily: "inherit" }} dir="rtl">
-      <form onSubmit={submitAuth} style={{ width: "100%", maxWidth: 420, background: "white", border: "1px solid #e7e9f1", borderRadius: 20, padding: 28, boxShadow: "0 18px 60px rgba(30,40,80,.08)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}><div style={{ width: 48, height: 48, display: "grid", placeItems: "center", background: "#ecebff", color: "#5d54c6", borderRadius: 14, fontSize: 24 }}>◷</div><div><h1 style={{ margin: 0, fontSize: 26 }}>ددلاین</h1><p style={{ margin: "4px 0 0", color: "#73778b" }}>مدیریت زمان، ساده‌تر</p></div></div>
-        <h2 style={{ fontSize: 20, margin: "0 0 8px" }}>{authMode === "signin" ? "ورود به حساب" : "ساخت حساب کاربری"}</h2>
-        <p style={{ color: "#73778b", lineHeight: 1.8, margin: "0 0 20px" }}>ددلاین‌هایت در حساب شخصی‌ات ذخیره می‌شوند و از دستگاه‌های مختلف در دسترس‌اند.</p>
-        <label style={{ display: "block", marginBottom: 14, fontSize: 14 }}>ایمیل<input type="email" autoComplete="email" required value={authEmail} onChange={e => setAuthEmail(e.target.value)} placeholder="name@example.com" style={{ display: "block", width: "100%", boxSizing: "border-box", marginTop: 8, padding: "12px 14px", border: "1px solid #dfe2ed", borderRadius: 10, font: "inherit", direction: "ltr" }} /></label>
-        <label style={{ display: "block", marginBottom: 14, fontSize: 14 }}>رمز عبور<input type="password" autoComplete={authMode === "signin" ? "current-password" : "new-password"} minLength={6} required value={authPassword} onChange={e => setAuthPassword(e.target.value)} placeholder="حداقل ۶ نویسه" style={{ display: "block", width: "100%", boxSizing: "border-box", marginTop: 8, padding: "12px 14px", border: "1px solid #dfe2ed", borderRadius: 10, font: "inherit" }} /></label>
-        {authError && <p role="alert" style={{ background: "#fff0f0", color: "#a82d36", padding: 12, borderRadius: 10, fontSize: 13, lineHeight: 1.7 }}>{authError}</p>}
-        <button type="submit" disabled={authBusy} style={{ width: "100%", padding: 13, border: 0, borderRadius: 10, background: "#6258d5", color: "white", font: "inherit", fontWeight: 700, cursor: "pointer", marginTop: 8 }}>{authBusy ? "لطفاً صبر کن…" : authMode === "signin" ? "ورود" : "ثبت‌نام"}</button>
-        <button type="button" onClick={() => { setAuthMode(authMode === "signin" ? "signup" : "signin"); setAuthError(""); }} style={{ width: "100%", marginTop: 14, padding: 10, border: 0, background: "transparent", color: "#5d54c6", font: "inherit", cursor: "pointer" }}>{authMode === "signin" ? "حساب نداری؟ ثبت‌نام کن" : "قبلاً حساب ساخته‌ای؟ وارد شو"}</button>
-        {authMode === "signin" && <button type="button" disabled={authBusy} onClick={signInGuest} style={{ width: "100%", marginTop: 8, padding: 12, border: "1px solid #dfe2ed", borderRadius: 10, background: "#f8f9ff", color: "#454b67", font: "inherit", fontWeight: 700, cursor: "pointer" }}>ورود به‌عنوان مهمان دانشگاه</button>}
+    <main className="auth-page" dir="rtl">
+      <form className="auth-card" onSubmit={submitAuth}>
+        <div className="auth-brand">
+          <div className="auth-brand-mark">◷</div>
+          <div><h1>ددلاین</h1><p>مدیریت زمان، ساده‌تر</p></div>
+        </div>
+        <div className="auth-intro">
+          <span className="auth-eyebrow">فضای شخصی برنامه‌ریزی</span>
+          <h2>{authMode === "signin" ? "ورود به حساب" : "ساخت حساب کاربری"}</h2>
+          <p>ددلاین‌هایت را یک‌جا مدیریت کن و از هر دستگاه به آن‌ها دسترسی داشته باش.</p>
+        </div>
+        <div className="auth-fields">
+          <label className="auth-label">ایمیل<input className="auth-input" type="email" autoComplete="email" required value={authEmail} onChange={e => setAuthEmail(e.target.value)} placeholder="name@example.com" /></label>
+          <label className="auth-label">رمز عبور<input className="auth-input" type="password" autoComplete={authMode === "signin" ? "current-password" : "new-password"} minLength={6} required value={authPassword} onChange={e => setAuthPassword(e.target.value)} placeholder="حداقل ۶ نویسه" /></label>
+        </div>
+        {authError && <p className="auth-error" role="alert">{authError}</p>}
+        <button className="auth-submit" type="submit" disabled={authBusy}>{authBusy ? "لطفاً صبر کن…" : authMode === "signin" ? "ورود به حساب" : "ساخت حساب"}</button>
+        <button className="auth-switch" type="button" onClick={() => { setAuthMode(authMode === "signin" ? "signup" : "signin"); setAuthError(""); }}>{authMode === "signin" ? "حساب نداری؟ ثبت‌نام کن" : "قبلاً حساب ساخته‌ای؟ وارد شو"}</button>
+        {authMode === "signin" && <div className="auth-divider"><span>یا</span></div>}
+        {authMode === "signin" && <button className="auth-guest" type="button" disabled={authBusy} onClick={signInGuest}>ورود به‌عنوان مهمان دانشگاه</button>}
+        <p className="auth-footnote">اطلاعات و وظایف حساب تو به‌صورت شخصی نگهداری می‌شوند.</p>
       </form>
     </main>
   );
