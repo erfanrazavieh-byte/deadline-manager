@@ -30,8 +30,24 @@ Deno.serve(async (req) => {
   if (subError) return new Response(subError.message, { status: 500, headers: corsHeaders });
 
   const { data: tasks, error: taskError } = await supabase
-    .from("tasks").select("id,user_id,title,status,reminders").neq("status", "done");
+    .from("tasks").select("id,user_id,title,status,due,reminders").neq("status", "done");
   if (taskError) return new Response(taskError.message, { status: 500, headers: corsHeaders });
+
+  const formatTimeRemaining = (due: string) => {
+    const diff = new Date(due).getTime() - Date.now();
+    if (!Number.isFinite(diff)) return "";
+    if (diff <= 0) return "زمان ددلاین رسیده یا گذشته است";
+    const totalMinutes = Math.ceil(diff / 60_000);
+    const days = Math.floor(totalMinutes / 1440);
+    const hours = Math.floor((totalMinutes % 1440) / 60);
+    const minutes = totalMinutes % 60;
+    const parts = [
+      days > 0 ? `${new Intl.NumberFormat("fa-IR").format(days)} روز` : "",
+      hours > 0 ? `${new Intl.NumberFormat("fa-IR").format(hours)} ساعت` : "",
+      minutes > 0 && days === 0 ? `${new Intl.NumberFormat("fa-IR").format(minutes)} دقیقه` : ""
+    ].filter(Boolean);
+    return `${parts.join(" و ")} تا ددلاین باقی مانده`;
+  };
 
   let sent = 0;
   for (const task of tasks || []) {
@@ -52,7 +68,7 @@ Deno.serve(async (req) => {
             keys: { p256dh: target.p256dh, auth: target.auth },
           }, JSON.stringify({
             title: "یادآوری ددلاین",
-            body: task.title,
+            body: `${task.title} — ${formatTimeRemaining(task.due)}`,
             url: "/",
             tag: `deadline-${task.id}-${reminder.id}`,
           }));
