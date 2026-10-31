@@ -221,7 +221,23 @@ export default function Home() {
     let checking = false;
     let interval: number | undefined;
 
-    const checkReminders = async () => {
+    const formatTimeRemaining = (due: string) => {
+    const diff = new Date(due).getTime() - Date.now();
+    if (!Number.isFinite(diff)) return "";
+    if (diff <= 0) return "زمان ددلاین رسیده یا گذشته است";
+    const totalMinutes = Math.ceil(diff / 60000);
+    const days = Math.floor(totalMinutes / 1440);
+    const hours = Math.floor((totalMinutes % 1440) / 60);
+    const minutes = totalMinutes % 60;
+    const parts = [
+      days > 0 ? `${days.toLocaleString("fa-IR")} روز` : "",
+      hours > 0 ? `${hours.toLocaleString("fa-IR")} ساعت` : "",
+      minutes > 0 && days === 0 ? `${minutes.toLocaleString("fa-IR")} دقیقه` : ""
+    ].filter(Boolean);
+    return `${parts.join(" و ")} تا ددلاین باقی مانده`;
+  };
+
+  const checkReminders = async () => {
       if (cancelled || checking || document.visibilityState !== "visible") return;
       checking = true;
       try {
@@ -245,7 +261,7 @@ export default function Home() {
             }
             if (reminderTime <= now) {
               await registration.showNotification("یادآوری ددلاین", {
-                body: task.title,
+                body: `${task.title} — ${formatTimeRemaining(task.due)}`,
                 tag: `deadline-${task.id}-${reminder.id}`,
                 data: { url: "/" }
               });
