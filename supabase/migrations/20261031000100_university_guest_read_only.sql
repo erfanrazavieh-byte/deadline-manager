@@ -87,3 +87,22 @@ create policy "Restrict guest push subscription deletes"
       (coalesce((select (auth.jwt() ->> 'is_anonymous')::boolean), false) = true and guest_for_user_id = '4b6ecd57-26b8-464f-bd24-dcda12ce4356'::uuid)
     )
   );
+ 
+drop policy if exists "Deny anonymous periodic reminder inserts" on public.periodic_reminders;
+create policy "Deny anonymous periodic reminder inserts"
+  on public.periodic_reminders as restrictive
+  for insert to authenticated
+  with check (coalesce((select (auth.jwt() ->> 'is_anonymous')::boolean), false) = false);
+
+drop policy if exists "Deny anonymous periodic reminder updates" on public.periodic_reminders;
+create policy "Deny anonymous periodic reminder updates"
+  on public.periodic_reminders as restrictive
+  for update to authenticated
+  using (coalesce((select (auth.jwt() ->> 'is_anonymous')::boolean), false) = false)
+  with check (coalesce((select (auth.jwt() ->> 'is_anonymous')::boolean), false) = false);
+
+drop policy if exists "Deny anonymous periodic reminder deletes" on public.periodic_reminders;
+create policy "Deny anonymous periodic reminder deletes"
+  on public.periodic_reminders as restrictive
+  for delete to authenticated
+  using (coalesce((select (auth.jwt() ->> 'is_anonymous')::boolean), false) = false);
