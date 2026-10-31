@@ -839,3 +839,28 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .calendar-task-copy strong{font-size:10px;color:var(--ink);overflow-wrap:anywhere}
 .calendar-day-empty{font-size:10px;color:var(--muted);margin:0;padding:9px 2px}
 :root[data-theme="dark"] .calendar-day.selected{background:#40345f!important;color:#fff!important}
+
+
+/* Calendar selected-day deadline titles: force readable contrast in dark themes. */
+:root[data-theme="dark"] .calendar-day-task,
+:root[data-theme="dark"] .calendar-day-task strong,
+:root[data-theme="dark"] .calendar-task-copy strong,
+:root[data-theme="dark"] .calendar-day-empty {
+  color: #edf0f8 !important;
+}
+:root[data-theme="dark"] .calendar-day-task {
+  background: #222735 !important;
+  border-color: #3a4258 !important;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="system"] .calendar-day-task,
+  :root[data-theme="system"] .calendar-day-task strong,
+  :root[data-theme="system"] .calendar-task-copy strong,
+  :root[data-theme="system"] .calendar-day-empty {
+    color: #edf0f8 !important;
+  }
+  :root[data-theme="system"] .calendar-day-task {
+    background: #222735 !important;
+    border-color: #3a4258 !important;
+  }
+}
