@@ -806,3 +806,18 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   .auth-brand{margin-bottom:20px}
   .auth-intro{margin-bottom:18px}
 }
+
+
+/* Keep the guest read-only label neutral: no green panel, border, or glow. */
+.guest-mode-banner,
+:root[data-theme="dark"] .guest-mode-banner,
+:root[data-theme="system"] .guest-mode-banner{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  color:var(--ink)!important;
+  padding:8px 0!important;
+}
+@media(prefers-color-scheme:dark){
+  :root[data-theme="system"] .guest-mode-banner{background:transparent!important;border:0!important;box-shadow:none!important;color:var(--ink)!important}
+}
