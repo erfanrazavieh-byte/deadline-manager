@@ -319,10 +319,10 @@ export default function Home() {
   };
   // Guest mode is a read-only deadline board: ignore the owner's completion flag
   // and hide deadlines only after they have been overdue for a full 24 hours.
-  const guestVisibleTasks = user?.guest ? tasks.filter(task => {
+  const guestVisibleTasks = useMemo(() => user?.guest ? tasks.filter(task => {
     const dueTime = new Date(task.due).getTime();
     return Number.isFinite(dueTime) && clockNow < dueTime + 24 * 60 * 60 * 1000;
-  }) : tasks;
+  }) : tasks, [tasks, user?.guest, clockNow]);
   const activeTasks = guestVisibleTasks.filter(t => t.status !== "done");
   const todayStart = new Date(); todayStart.setHours(0,0,0,0);
   const tomorrow = new Date(todayStart); tomorrow.setDate(tomorrow.getDate()+1);
@@ -346,7 +346,7 @@ export default function Home() {
       if (a.status !== "done" && b.status === "done") return -1;
       return +new Date(a.due)-+new Date(b.due);
     });
-  }, [tasks, activeNav, categoryFilter, query]);
+  }, [guestVisibleTasks, tasks, activeNav, categoryFilter, query]);
 
   const openNew = () => {
     const now = momentJalaali();
