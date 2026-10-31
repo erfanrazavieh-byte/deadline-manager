@@ -33,8 +33,15 @@ Deno.serve(async (req) => {
     .from("tasks").select("id,user_id,title,status,category,due,reminders").neq("status", "done");
   if (taskError) return new Response(taskError.message, { status: 500, headers: corsHeaders });
 
+  const parseDueTimestamp = (due: string) => {
+    // New records are stored as ISO timestamps. Legacy records without a timezone
+    // were entered in Iran local time, so interpret them as Asia/Tehran.
+    const hasTimezone = /(?:Z|[+-]\\d{2}:?\\d{2})$/i.test(due);
+    return new Date(hasTimezone ? due : `${due}+03:30`).getTime();
+  };
+
   const formatTimeRemaining = (due: string) => {
-    const diff = new Date(due).getTime() - Date.now();
+    const diff = parseDueTimestamp(due) - Date.now();
     if (!Number.isFinite(diff)) return "";
     if (diff <= 0) return "زمان ددلاین رسیده یا گذشته است";
     const totalMinutes = Math.ceil(diff / 60_000);
