@@ -829,7 +829,7 @@ export default function Home() {
                     })}
                   </div>
                   <div className="calendar-legend"><span><i className="legend-dot"/> دارای ددلاین</span><span><i className="legend-today"/> امروز</span></div>
-                  {selectedCalendarDay&&<div className="calendar-day-details" aria-live="polite">{selectedCalendarTasks.length>0?<div className="calendar-day-task-list">{selectedCalendarTasks.map(task=><div className="calendar-day-task" key={task.id}><div className="calendar-task-copy"><strong>{task.title}</strong><span>{new Intl.DateTimeFormat("fa-IR",{hour:"2-digit",minute:"2-digit"}).format(new Date(task.due))}</span></div></div>)}</div>:<p className="calendar-day-empty">برای این تاریخ ددلاینی ثبت نشده است.</p>}</div>}
+                  {selectedCalendarDay&&<div className="calendar-day-details" aria-live="polite">{selectedCalendarTasks.length>0?<div className="calendar-day-task-list">{selectedCalendarTasks.map(task=><div className="calendar-day-task" key={task.id}><div className="calendar-task-copy"><strong>{task.title}</strong></div></div>)}</div>:<p className="calendar-day-empty">برای این تاریخ ددلاینی ثبت نشده است.</p>}</div>}
                 </div>
                 <div className="upcoming-card"><div className="upcoming-head"><h2>در یک نگاه</h2><span className="upcoming-icon"><AlarmClock size={17}/></span></div>
                   {activeTasks.filter(t=>new Date(t.due)>=new Date()).sort((a,b)=>+new Date(a.due)-+new Date(b.due)).slice(0,3).map((t,i)=><div className="upcoming-item" key={t.id}><div className={`upcoming-line line-${i}`}/><div><strong>{t.title}</strong><span>{faDateTime(t.due)}</span></div><small>{timeLeft(t.due, clockNow)}</small></div>)}
