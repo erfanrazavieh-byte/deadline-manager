@@ -616,11 +616,13 @@ export default function Home() {
   const calendarJMonth = calendarJalali.jMonth() + 1;
   const monthDays = jalaliDaysInMonth(calendarJYear, calendarJMonth);
   const monthOffset = (momentJalaali(`${calendarJYear}/${calendarJMonth}/1`, "jYYYY/jM/jD").day() + 1) % 7;
-  // فقط کارهای انجام‌نشده روی تقویم نشانگر داشته باشند.
-  const taskDaySet = new Set(tasks.filter(t => t.status !== "done").map(t => {
-    const d = momentJalaali(t.due);
-    return `${d.jYear()}-${d.jMonth() + 1}-${d.jDate()}`;
-  }));
+  // برای هر ددلاینِ انجام‌نشده، یک نقطه در روز مربوط به آن نمایش داده می‌شود.
+  const taskDayCounts = tasks.filter(t => t.status !== "done").reduce((counts, task) => {
+    const d = momentJalaali(task.due);
+    const key = `${d.jYear()}-${d.jMonth() + 1}-${d.jDate()}`;
+    counts.set(key, (counts.get(key) || 0) + 1);
+    return counts;
+  }, new Map<string, number>());
 
   if (authLoading) return <main className="auth-page" dir="rtl"><div className="auth-loading">در حال بررسی حساب کاربری…</div></main>;
 
@@ -788,7 +790,8 @@ export default function Home() {
                       const day=i+1, key=`${calendarJYear}-${calendarJMonth}-${day}`;
                       const todayJalali = momentJalaali();
                       const isToday = todayJalali.jDate()===day && todayJalali.jMonth()+1===calendarJMonth && todayJalali.jYear()===calendarJYear;
-                      return <button key={day} className={`calendar-day ${isToday?"today":""} ${taskDaySet.has(key)?"has-task":""}`} onClick={()=>{setActiveNav("همه کارها");setQuery("");}}>{day.toLocaleString("fa-IR")}{taskDaySet.has(key)&&<i/>}</button>;
+                      const deadlineCount = taskDayCounts.get(key) || 0;
+                       return <button key={day} className={`calendar-day ${isToday?"today":""} ${deadlineCount>0?"has-task":""}`} onClick={()=>{setActiveNav("همه کارها");setQuery("");}}>{day.toLocaleString("fa-IR")}{deadlineCount>0&&<span className="calendar-dots" aria-label={`${deadlineCount} ددلاین`}>{Array.from({length:deadlineCount},(_,dotIndex)=><i key={dotIndex}/>)}</span>}</button>;
                     })}
                   </div>
                   <div className="calendar-legend"><span><i className="legend-dot"/> دارای ددلاین</span><span><i className="legend-today"/> امروز</span></div>
