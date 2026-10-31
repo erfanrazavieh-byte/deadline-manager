@@ -182,7 +182,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .modal-actions{display:flex;justify-content:flex-start;gap:9px;border-top:1px solid var(--line);padding-top:17px}
 .modal-actions .primary-btn{min-width:120px}
 .toast{position:fixed;z-index:100;bottom:25px;left:25px;display:flex;align-items:center;gap:9px;background:#24283a;color:#fff;border-radius:10px;padding:13px 17px;box-shadow:0 8px 30px #16192c35;font-size:11px;animation:toast-in .2s ease-out}
-.toast svg{color:#74d1a7}
+.toast svg{color:#74d1a7}.toast.toast-error svg{color:#ff626b}
 @keyframes toast-in{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}
 .menu-trigger,.mobile-bottom,.mobile-overlay{display:none}
 @media(min-width:1500px){.content{padding-left:48px;padding-right:48px}.workspace-grid{grid-template-columns:minmax(0,1fr) 320px}.sidebar{width:270px;flex-basis:270px}}
