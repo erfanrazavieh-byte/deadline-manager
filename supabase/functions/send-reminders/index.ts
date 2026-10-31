@@ -26,11 +26,11 @@ Deno.serve(async (req) => {
   const now = Date.now();
   const windowEnd = new Date(now + 60_000).toISOString();
   const { data: subscriptions, error: subError } = await supabase
-    .from("push_subscriptions").select("id,user_id,endpoint,p256dh,auth");
+    .from("push_subscriptions").select("id,user_id,guest_for_user_id,endpoint,p256dh,auth");
   if (subError) return new Response(subError.message, { status: 500, headers: corsHeaders });
 
   const { data: tasks, error: taskError } = await supabase
-    .from("tasks").select("id,user_id,title,status,due,reminders").neq("status", "done");
+    .from("tasks").select("id,user_id,title,status,category,due,reminders").neq("status", "done");
   if (taskError) return new Response(taskError.message, { status: 500, headers: corsHeaders });
 
   const formatTimeRemaining = (due: string) => {
@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
         .select("id").eq("marker", marker).maybeSingle();
       if (alreadySent) continue;
 
-      const targets = (subscriptions || []).filter((s: any) => s.user_id === task.user_id);
+      const targets = (subscriptions || []).filter((s: any) => s.user_id === task.user_id || (s.guest_for_user_id === task.user_id && task.category === "دانشگاه"));
       let delivered = false;
       for (const target of targets) {
         try {
@@ -127,7 +127,7 @@ Deno.serve(async (req) => {
   };
 
   for (const reminder of periodicReminders || []) {
-    const targets = (subscriptions || []).filter((s: any) => s.user_id === reminder.user_id);
+    const targets = (subscriptions || []).filter((s: any) => s.user_id === reminder.user_id && !s.guest_for_user_id);
     let delivered = false;
     for (const target of targets) {
       try {
