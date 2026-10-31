@@ -827,9 +827,3 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .calendar-day .calendar-dots{position:absolute;bottom:3px;left:3px;right:3px;display:flex;justify-content:center;align-items:center;gap:2px;pointer-events:none}
 .calendar-day .calendar-dots i{position:static;display:block;flex:0 0 4px;width:4px;height:4px;border-radius:50%;background:var(--purple)}
 .calendar-day.today .calendar-dots i{background:#fff}
-
-
-@media(max-width:700px){
-  .mobile-bottom button .mobile-tasks-label{display:flex;flex-direction:column;align-items:center;gap:2px;flex:initial;line-height:1.25;white-space:normal}
-  .mobile-bottom button .mobile-tasks-label small{font-size:6px;font-weight:400;color:var(--muted);max-width:94px;line-height:1.35;text-align:center}
-}
