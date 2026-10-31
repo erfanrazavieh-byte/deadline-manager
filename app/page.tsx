@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import {
-  AlarmClock, ArrowDownWideNarrow, Bell, CalendarDays, Check, CheckCheck, Sun, Moon,
+  AlarmClock, ArrowDownWideNarrow, Bell, CalendarDays, Check, CheckCheck, Sun, Moon, KeyRound,
   ChevronDown, Circle, Clock3, LayoutDashboard, ListTodo, MoreHorizontal,
   Plus, Search, Settings2, SlidersHorizontal, Trash2, X, Pencil, ChevronLeft,
   ChevronRight, CalendarClock, CircleAlert, Menu, CheckCircle2
@@ -125,6 +125,9 @@ export default function Home() {
   };
   const [showSettings, setShowSettings] = useState(false);
   const [showPeriodic, setShowPeriodic] = useState(false);
+  const [showSharedImport, setShowSharedImport] = useState(false);
+  const [sharedCode, setSharedCode] = useState("");
+  const [sharedImportBusy, setSharedImportBusy] = useState(false);
   const [periodicReminders, setPeriodicReminders] = useState<PeriodicReminder[]>([]);
   const [periodicLoading, setPeriodicLoading] = useState(false);
   const [periodicTitle, setPeriodicTitle] = useState("");
@@ -423,6 +426,40 @@ export default function Home() {
     if (error) { setToast("تغییر وضعیت ناموفق بود: " + error.message); return; }
     setTasks(old => old.map(t => t.id === task.id ? { ...t, status } : t));
   };
+  const importSharedDeadlines = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!user || user.guest) return;
+    if (!sharedCode.trim()) { setToast("کد دسترسی را وارد کن."); return; }
+    setSharedImportBusy(true);
+    const { data, error } = await supabase.rpc("import_university_deadlines", { p_code: sharedCode.trim() });
+    setSharedImportBusy(false);
+    if (error) {
+      setToast(error.message.includes("کد دسترسی") ? "کد واردشده معتبر نیست." : "دریافت ددلاین‌های مشترک ناموفق بود: " + error.message);
+      return;
+    }
+    const importedCount = Number(data || 0);
+    const { data: rows, error: loadError } = await supabase
+      .from("tasks")
+      .select("id,title,description,due,category,priority,status,reminders,created_at")
+      .eq("user_id", user.id)
+      .order("due", { ascending: true });
+    if (loadError) {
+      setToast("ددلاین‌ها وارد شدند، اما بارگذاری فهرست ناموفق بود. صفحه را تازه‌سازی کن.");
+      return;
+    }
+    setTasks((rows || []).map((row: any) => ({
+      id: row.id, title: row.title, description: row.description || "", due: row.due,
+      category: row.category, priority: row.priority, status: row.status,
+      reminders: row.reminders || [], createdAt: row.created_at
+    })));
+    setSharedCode("");
+    setActiveNav("همه کارها");
+    setShowSharedImport(false);
+    setToast(importedCount > 0
+      ? `${importedCount.toLocaleString("fa-IR")} ددلاین به حساب تو اضافه شد.`
+      : "همه ددلاین‌های مشترک قبلاً به حسابت اضافه شده‌اند.");
+  };
+
   const signInGuest = async () => {
     setAuthBusy(true); setAuthError("");
     const { error } = await supabase.auth.signInAnonymously();
@@ -710,7 +747,8 @@ export default function Home() {
         </nav>
         <div className="sidebar-bottom">
           <button className="nav-item theme-toggle" onClick={toggleTheme} aria-label="تغییر حالت روشن و تاریک"><span className="theme-toggle-icon">{theme === "dark" || (theme === "system" && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches) ? <Sun size={18}/> : <Moon size={18}/>}</span><span>{theme === "dark" || (theme === "system" && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "حالت روز" : "حالت شب"}</span></button>
-          <button className={`nav-item ${showSettings?"active":""}`} onClick={()=>{setShowSettings(!showSettings);setShowPeriodic(false);setMobileMenu(false);}}><Settings2 size={18}/><span>تنظیمات</span></button>
+          {!user.guest && <button className={`nav-item ${showSharedImport?"active":""}`} onClick={()=>{setShowSharedImport(!showSharedImport);setShowSettings(false);setShowPeriodic(false);setMobileMenu(false);}}><KeyRound size={18}/><span>ددلاین‌های مشترک</span></button>}
+          <button className={`nav-item ${showSettings?"active":""}`} onClick={()=>{setShowSettings(!showSettings);setShowPeriodic(false);setShowSharedImport(false);setMobileMenu(false);}}><Settings2 size={18}/><span>تنظیمات</span></button>
           <div className="profile-row"><div className="avatar">ا</div><div className="profile-text"><strong>{user.guest ? "مهمان دانشگاه" : "فضای شخصی"}</strong><span>{user.guest ? "فقط مشاهده ددلاین‌های دانشگاه" : (user.email || "حساب کاربری")}</span></div><MoreHorizontal size={19} className="muted"/></div>
         </div>
       </aside>
@@ -719,14 +757,35 @@ export default function Home() {
       <section className="main-panel">
         <header className="topbar">
           <button className="icon-btn menu-trigger" onClick={()=>setMobileMenu(true)} aria-label="منو"><Menu size={20}/></button>
-          <div className="breadcrumbs">{user.guest ? "مشاهده ددلاین‌های دانشگاه" : "فضای کاری"} <ChevronLeft size={14}/> <strong>{showPeriodic?"یادآورهای دوره‌ای":showSettings?"تنظیمات":activeNav}</strong></div>
+          <div className="breadcrumbs">{user.guest ? "مشاهده ددلاین‌های دانشگاه" : "فضای کاری"} <ChevronLeft size={14}/> <strong>{showPeriodic?"یادآورهای دوره‌ای":showSharedImport?"ددلاین‌های مشترک":showSettings?"تنظیمات":activeNav}</strong></div>
           <div className="top-actions">
             <div className="date-chip"><CalendarDays size={15}/>{faDate(new Date(), { weekday:"long", year:"numeric" })}</div><button className="secondary-btn compact" onClick={signOut} title={user.guest ? "خروج از حالت مهمان" : (user.email || "خروج از حساب")}>خروج</button>
             <button className={`icon-btn notification-btn ${notifications?"notification-on":""}`} onClick={()=>{setShowSettings(!showSettings);setShowPeriodic(false);}} aria-label="تنظیمات اعلان"><Bell size={18}/><i/></button>
           </div>
         </header>
 
-        {showPeriodic ? (
+        {showSharedImport ? (
+          <div className="content settings-content">
+            <div className="page-heading"><div><div className="eyebrow">دسترسی با کد</div><h1>ددلاین‌های مشترک دانشگاه</h1><p>با وارد کردن کد دسترسی، ددلاین‌های دانشگاه را به فضای شخصی خودت اضافه کن.</p></div></div>
+            <div className="settings-card" style={{ padding: 22, maxWidth: 620 }}>
+              <div className="settings-row" style={{ alignItems: "flex-start", marginBottom: 18 }}>
+                <div className="settings-icon"><KeyRound size={20}/></div>
+                <div className="settings-copy">
+                  <strong>وارد کردن کد دسترسی</strong>
+                  <p>ددلاین‌ها به‌صورت کپی وارد حساب تو می‌شوند؛ می‌توانی عنوان، زمان، توضیحات و وضعیت انجام‌شدنشان را مستقل تغییر بدهی. تغییرات تو روی حساب مهمان یا حساب دیگران اثری ندارد.</p>
+                </div>
+              </div>
+              <form onSubmit={importSharedDeadlines} style={{ display: "grid", gap: 14 }}>
+                <label className="field-label">کد دسترسی
+                  <input value={sharedCode} onChange={e=>setSharedCode(e.target.value.toUpperCase())} placeholder="کد را وارد کن" autoComplete="off" maxLength={32} required />
+                </label>
+                <div style={{ display: "flex", justifyContent: "flex-start" }}>
+                  <button type="submit" className="primary-btn" disabled={sharedImportBusy || !sharedCode.trim()}><KeyRound size={17}/>{sharedImportBusy ? "در حال دریافت..." : "دریافت ددلاین‌ها"}</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        ) : showPeriodic ? (
           <div className="content settings-content">
             <div className="page-heading"><div><div className="eyebrow">برنامه‌ریزی اعلان‌ها</div><h1>یادآورهای دوره‌ای</h1><p>اعلان تکرارشونده بساز؛ حتی وقتی سایت بسته است.</p></div></div>
             <div className="settings-card" style={{ padding: 22 }}>
