@@ -739,7 +739,7 @@ export default function Home() {
           <div className="content">
             {user.guest && <div className="guest-mode-banner">READ-ONLY MODE</div>}
             <div className="page-heading">
-              <div><div className="eyebrow">{activeNav==="نمای کلی"?"خلاصه فعالیت‌ها":"مدیریت وظایف"}</div><h1>{activeNav==="نمای کلی"?"نمای کلی":activeNav}</h1>{activeNav==="نمای کلی" && <p>برنامه امروزت را مرتب کن و با تمرکز جلو برو.</p>}</div>
+              <div><div className="eyebrow">{activeNav==="نمای کلی"?"خلاصه فعالیت‌ها":"مدیریت وظایف"}</div><h1>{activeNav==="نمای کلی"?"نمای کلی":activeNav}</h1>{activeNav==="نمای کلی" ? <p>برنامه امروزت را مرتب کن و با تمرکز جلو برو.</p> : activeNav==="همه کارها" ? <p>ددلاین تعریف کنید و اعلان یادآور دریافت کنید</p> : null}</div>
               {!user.guest && <button className="primary-btn" onClick={openNew}><Plus size={18}/> کار جدید</button>}
             </div>
 
@@ -821,7 +821,7 @@ export default function Home() {
         <div className="modal-actions"><button type="button" className="secondary-btn" onClick={()=>setModalOpen(false)}>انصراف</button><button type="submit" className="primary-btn"><Check size={17}/>{editing?"ذخیره تغییرات":"ثبت کار"}</button></div>
       </form></div>}
       {toast&&<div className="toast"><CheckCircle2 size={17}/>{toast}</div>}
-      <div className="mobile-bottom"><button onClick={()=>{setActiveNav("نمای کلی");setShowSettings(false);setShowPeriodic(false);}} className={activeNav==="نمای کلی"?"selected":""}><LayoutDashboard size={19}/><span>نمای کلی</span></button><button onClick={()=>setActiveNav("همه کارها")} className={activeNav==="همه کارها"?"selected":""}><ListTodo size={19}/><span className="mobile-tasks-label">کارها<small>ددلاین تعریف کنید و اعلان یادآور دریافت کنید</small></span></button>{!user.guest && <button onClick={openNew}><Plus size={22}/><span>کار جدید</span></button>}<button onClick={()=>{setShowSettings(true);setShowPeriodic(false);}}><Settings2 size={19}/><span>تنظیمات</span></button></div>
+      <div className="mobile-bottom"><button onClick={()=>{setActiveNav("نمای کلی");setShowSettings(false);setShowPeriodic(false);}} className={activeNav==="نمای کلی"?"selected":""}><LayoutDashboard size={19}/><span>نمای کلی</span></button><button onClick={()=>setActiveNav("همه کارها")} className={activeNav==="همه کارها"?"selected":""}><ListTodo size={19}/><span>کارها</span></button>{!user.guest && <button onClick={openNew}><Plus size={22}/><span>کار جدید</span></button>}<button onClick={()=>{setShowSettings(true);setShowPeriodic(false);}}><Settings2 size={19}/><span>تنظیمات</span></button></div>
     </main>
   );
 }
