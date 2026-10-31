@@ -990,3 +990,61 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   .auth-showcase{min-height:610px;padding-top:28px;padding-bottom:22px}
   .auth-showcase-copy{margin:18px 0}
 }
+
+
+/* Classic half-dark authentication theme */
+.auth-page{
+  background:#17191e!important;
+  background-image:radial-gradient(ellipse at 50% 0%,rgba(151,126,83,.16),transparent 48%),radial-gradient(circle at 95% 95%,rgba(88,101,116,.12),transparent 34%)!important;
+  color:#eee9df;
+}
+.auth-card{
+  background:rgba(36,39,45,.97);
+  border:1px solid #41434a;
+  box-shadow:0 24px 70px rgba(0,0,0,.34);
+}
+.auth-brand-mark{
+  background:linear-gradient(145deg,#a88b59,#78613c);
+  box-shadow:0 8px 18px rgba(0,0,0,.24);
+}
+.auth-brand h1,.auth-intro h2{color:#f0eadf}
+.auth-brand p,.auth-intro p{color:#aaa69d}
+.auth-eyebrow{color:#c2a36c}
+.auth-label{color:#ded8cc}
+.auth-input{
+  background:#2b2e35!important;
+  border-color:#494a4e!important;
+  color:#f0ece4!important;
+}
+.auth-input:focus{
+  border-color:#b99a64!important;
+  box-shadow:0 0 0 4px rgba(185,154,100,.14)!important;
+}
+.auth-input::placeholder{color:#88877f!important}
+.auth-submit{
+  background:linear-gradient(105deg,#a88b59,#806640);
+  color:#fffaf0;
+  box-shadow:0 8px 18px rgba(0,0,0,.22);
+}
+.auth-submit:hover:not(:disabled){
+  background:linear-gradient(105deg,#b99b68,#92764d);
+  box-shadow:0 11px 22px rgba(0,0,0,.28);
+}
+.auth-switch{color:#d0b27e}
+.auth-guest{
+  background:#30333a;
+  border-color:#55565a;
+  color:#e4ded2;
+}
+.auth-guest:hover:not(:disabled){background:#393c43;border-color:#a88b59}
+.auth-divider{color:#929087}
+.auth-divider:before,.auth-divider:after{background:#45464a}
+.auth-tip-university{background:#292f39;border:1px solid #414957}
+.auth-tip-personal{background:#302e29;border:1px solid #514737}
+.auth-tip strong{color:#eee6d8}
+.auth-tip-badge{background:rgba(185,154,100,.13);color:#d0b27e}
+.auth-tip p{color:#b5b1a8}
+.auth-footnote{border-color:#44454a;color:#99978f}
+@media(max-width:560px){
+  .auth-card{background:rgba(36,39,45,.98);border-color:#41434a}
+}
