@@ -237,9 +237,9 @@ export default function Home() {
             if (localStorage.getItem(key) === "true") continue;
             const reminderTime = new Date(reminder.at).getTime();
             if (!Number.isFinite(reminderTime)) continue;
-            // Send due reminders when the page is open, including reminders up to 24 hours late.
-            // Older reminders are marked handled to avoid a burst of stale notifications.
-            if (reminderTime < now - 24 * 60 * 60 * 1000) {
+            // Never send stale reminders after their scheduled time has passed.
+            // Mark them handled so editing/reloading cannot trigger an old reminder.
+            if (reminderTime < now - 60_000) {
               localStorage.setItem(key, "true");
               continue;
             }
@@ -347,11 +347,23 @@ export default function Home() {
     if (!form.title.trim() || !form.due) { setToast("عنوان و زمان ددلاین را وارد کن."); return; }
     if (new Date(form.due).getTime() <= 0) { setToast("زمان ددلاین معتبر نیست."); return; }
     if (!ready) { setToast("لطفاً تا پایان بارگذاری صبر کن."); return; }
+
+    const now = Date.now();
+    const dueTime = new Date(form.due).getTime();
+    const reminders = form.reminderMins
+      .map((minutes, index) => ({
+        id: `${now}-r${index}`,
+        at: new Date(dueTime - Number(minutes) * 60000).toISOString(),
+        reminderTime: dueTime - Number(minutes) * 60000
+      }))
+      // یادآورهایی که زمانشان گذشته، هنگام ذخیره دوباره زمان‌بندی نمی‌شوند.
+      .filter(reminder => reminder.reminderTime > now)
+      .map(({ id, at }) => ({ id, at }));
+    const skippedPastReminders = form.reminderMins.length - reminders.length;
+
     if (editing) {
       const existing = tasks.find(t => t.id === editing);
       if (!existing) return;
-      const now = Date.now();
-      const reminders = form.reminderMins.map((m,i) => ({ id: `${now}-r${i}`, at: new Date(new Date(form.due).getTime()-Number(m)*60000).toISOString() }));
       const updated: Task = { ...existing, title: form.title.trim(), description: form.description, due: form.due, category: form.category, priority: form.priority, status: form.status, reminders };
       const { error } = await supabase.from("tasks").update({
         title: updated.title, description: updated.description, due: updated.due,
@@ -359,10 +371,7 @@ export default function Home() {
       }).eq("id", editing).eq("user_id", user.id);
       if (error) { setToast("ذخیره تغییرات ناموفق بود: " + error.message); return; }
       setTasks(old => old.map(t => t.id === editing ? updated : t));
-      setToast("تغییرات ذخیره شد.");
     } else {
-      const now = Date.now();
-      const reminders = form.reminderMins.map((m,i) => ({ id: `${now}-r${i}`, at: new Date(new Date(form.due).getTime()-Number(m)*60000).toISOString() }));
       const created: Task = { id: `${now}`, title: form.title.trim(), description: form.description, due: form.due, category: form.category, priority: form.priority, status: form.status, reminders, createdAt: new Date().toISOString() };
       const { error } = await supabase.from("tasks").insert({
         id: created.id, user_id: user.id, title: created.title, description: created.description,
@@ -371,8 +380,10 @@ export default function Home() {
       });
       if (error) { setToast("ثبت کار ناموفق بود: " + error.message); return; }
       setTasks(old => [...old, created]);
-      setToast("کار جدید اضافه شد.");
     }
+    setToast(skippedPastReminders > 0
+      ? `ذخیره شد؛ ${skippedPastReminders} یادآور که زمانشان گذشته بود، حذف شد.`
+      : editing ? "تغییرات ذخیره شد." : "کار جدید اضافه شد.");
     setModalOpen(false);
   };
   const deleteTask = async (task: Task) => {
