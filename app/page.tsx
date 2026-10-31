@@ -81,7 +81,6 @@ export default function Home() {
   const [activeNav, setActiveNav] = useState("همه کارها");
   const [query, setQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("همه دسته‌ها");
-  const [statusFilter, setStatusFilter] = useState("همه وضعیت‌ها");
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm());
@@ -318,14 +317,13 @@ export default function Home() {
     if (activeNav === "عقب‌افتاده") list = list.filter(t => t.status !== "done" && new Date(t.due) < new Date());
     if (activeNav === "انجام‌شده") list = list.filter(t => t.status === "done");
     if (categoryFilter !== "همه دسته‌ها") list = list.filter(t => t.category === categoryFilter);
-    if (statusFilter !== "همه وضعیت‌ها") list = list.filter(t => t.status === statusFilter);
     if (query.trim()) list = list.filter(t => (t.title+" "+t.description).toLowerCase().includes(query.toLowerCase()));
     return list.sort((a,b) => {
       if (a.status === "done" && b.status !== "done") return 1;
       if (a.status !== "done" && b.status === "done") return -1;
       return +new Date(a.due)-+new Date(b.due);
     });
-  }, [tasks, activeNav, categoryFilter, statusFilter, query]);
+  }, [tasks, activeNav, categoryFilter, query]);
 
   const openNew = () => {
     const now = momentJalaali();
@@ -758,7 +756,6 @@ export default function Home() {
                 <div className="toolbar">
                   <div className="search-box"><Search size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="جست‌وجوی کارها..."/>{query&&<button onClick={()=>setQuery("")} aria-label="پاک کردن"><X size={14}/></button>}</div>
                   <div className="filter-wrap"><SlidersHorizontal size={15}/><select value={categoryFilter} onChange={e=>setCategoryFilter(e.target.value)} aria-label="فیلتر دسته‌بندی"><option>همه دسته‌ها</option>{categories.map(c=><option key={c}>{c}</option>)}</select></div>
-                  <div className="filter-wrap status-filter"><select value={statusFilter} onChange={e=>setStatusFilter(e.target.value)} aria-label="فیلتر وضعیت"><option value="همه وضعیت‌ها">همه وضعیت‌ها</option><option value="todo">انجام‌نشده</option><option value="doing">در حال انجام</option><option value="done">انجام‌شده</option></select><ChevronDown size={14}/></div>
                 </div>
                 <div className="task-list">
                   {shownTasks.length===0 ? <div className="empty-state"><div><CheckCircle2 size={27}/></div><strong>کاری برای نمایش نیست</strong><p>فیلترها را تغییر بده یا یک کار جدید اضافه کن.</p>{!user.guest && <button className="secondary-btn" onClick={openNew}><Plus size={16}/> ایجاد کار</button>}</div> :
@@ -820,7 +817,6 @@ export default function Home() {
           <aside className="date-picker-side"><strong>انتخاب سریع</strong><button type="button" onClick={()=>chooseQuickDate(0)}><CalendarDays size={15}/> امروز</button><button type="button" onClick={()=>chooseQuickDate(7)}><Clock3 size={15}/> ۷ روز دیگر</button><button type="button" onClick={()=>chooseQuickDate(30)}><CalendarDays size={15}/> ۳۰ روز دیگر</button><button type="button" onClick={chooseEndOfMonth}><CalendarDays size={15}/> پایان ماه</button><label>زمان ددلاین<input type="time" value={deadlineTime} onChange={e=>setDeadlineTime(e.target.value)} required/></label></aside>
           <div className="date-picker-actions"><button type="button" className="secondary-btn" onClick={()=>setDatePickerOpen(false)}>لغو</button><button type="button" className="primary-btn" onClick={confirmPickedDate}><Check size={16}/> تأیید تاریخ</button></div>
         </div>}</div></div><label className="field-label">دسته‌بندی<select value={form.category} onChange={e=>setForm({...form,category:e.target.value as Category})}>{categories.map(c=><option key={c}>{c}</option>)}</select></label></div>
-        <div className="form-two"><label className="field-label">وضعیت<select value={form.status} onChange={e=>setForm({...form,status:e.target.value as Status})}><option value="todo">انجام‌نشده</option><option value="doing">در حال انجام</option><option value="done">انجام‌شده</option></select></label></div>
         <div className="reminder-field"><div className="reminder-label"><Bell size={15}/> یادآورهای پیشنهادی <span>زمان‌ها نسبت به ددلاین محاسبه می‌شوند</span></div><div className="reminder-options">{reminderChoices.map(r=><label key={r.v} className={`reminder-option ${form.reminderMins.includes(r.v)?"selected":""}`}><input type="checkbox" checked={form.reminderMins.includes(r.v)} onChange={e=>setForm({...form,reminderMins:e.target.checked?[...form.reminderMins,r.v]:form.reminderMins.filter(v=>v!==r.v)})}/>{r.l}</label>)}</div></div>
         <div className="modal-actions"><button type="button" className="secondary-btn" onClick={()=>setModalOpen(false)}>انصراف</button><button type="submit" className="primary-btn"><Check size={17}/>{editing?"ذخیره تغییرات":"ثبت کار"}</button></div>
       </form></div>}
