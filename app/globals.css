@@ -864,3 +864,26 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
     border-color: #3a4258 !important;
   }
 }
+
+
+/* Compact feature hints below the authentication form. */
+.auth-tips{display:grid;gap:10px;margin-top:23px}
+.auth-tips-heading{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:1px}
+.auth-tips-heading strong{color:#34394f;font-size:12px;font-weight:800}
+.auth-tips-heading span{color:#9a9faf;font-size:10px}
+.auth-tip{padding:12px 13px;border:1px solid #e9eaf3;border-radius:14px;background:#fafbfe}
+.auth-tip-university{background:linear-gradient(110deg,#f3f5ff,#fafbff);border-color:#e3e7fb}
+.auth-tip-personal{background:linear-gradient(110deg,#f1faf7,#fbfdfc);border-color:#e0f0e9}
+.auth-tip-top{display:flex;align-items:center;gap:8px;min-width:0}
+.auth-tip-icon{width:29px;height:29px;flex:0 0 29px;display:grid;place-items:center;border-radius:9px;background:#e5e9ff;color:#5f62c9}
+.auth-tip-personal .auth-tip-icon{background:#def3e9;color:#27845f}
+.auth-tip-top>strong{color:#30364d;font-size:11px;font-weight:800;white-space:nowrap}
+.auth-tip-badge{margin-right:auto;padding:3px 7px;border-radius:20px;background:#e7eaff;color:#6265bd;font-size:9px;font-weight:700;white-space:nowrap}
+.auth-tip-personal .auth-tip-badge{background:#e0f3e9;color:#348064}
+.auth-tip p{margin:8px 0 0;color:#777f93;font-size:10px;line-height:1.9}
+@media(max-width:560px){
+  .auth-tips{gap:8px;margin-top:19px}
+  .auth-tip{padding:11px}
+  .auth-tip p{font-size:10px}
+  .auth-tips-heading span{font-size:9px}
+}
