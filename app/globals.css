@@ -1048,3 +1048,46 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 @media(max-width:560px){
   .auth-card{background:rgba(36,39,45,.98);border-color:#41434a}
 }
+
+
+/* Refined charcoal + slate-blue authentication palette */
+.auth-page{
+  background:#171a20!important;
+  background-image:radial-gradient(ellipse at 50% 0%,rgba(105,126,158,.14),transparent 48%),radial-gradient(circle at 95% 95%,rgba(74,91,116,.12),transparent 34%)!important;
+  color:#e8edf5;
+}
+.auth-card{background:#22262e!important;border:1px solid #383e49!important;box-shadow:0 24px 70px rgba(0,0,0,.38)}
+.auth-brand-mark{background:linear-gradient(145deg,#7186a8,#485b78)!important;box-shadow:0 8px 18px rgba(0,0,0,.25)}
+.auth-brand h1,.auth-intro h2{color:#edf1f7!important}
+.auth-brand p,.auth-intro p{color:#a6afbd!important}
+.auth-eyebrow{color:#9eb4d5!important}
+.auth-label{color:#d6deea!important}
+.auth-card input:not([type="checkbox"]),.auth-card select,.auth-card textarea,.auth-input{
+  background:#292e38!important;
+  background-color:#292e38!important;
+  color:#edf1f7!important;
+  border:1px solid #454d5b!important;
+  box-shadow:none!important;
+}
+.auth-card input::placeholder,.auth-card textarea::placeholder,.auth-input::placeholder{color:#929cab!important;opacity:1}
+.auth-card input:focus,.auth-card select:focus,.auth-card textarea:focus,.auth-input:focus{
+  border-color:#8299bc!important;
+  box-shadow:0 0 0 3px rgba(130,153,188,.15)!important;
+}
+.auth-card input:-webkit-autofill,.auth-card input:-webkit-autofill:hover,.auth-card input:-webkit-autofill:focus{
+  -webkit-text-fill-color:#edf1f7!important;
+  -webkit-box-shadow:0 0 0 1000px #292e38 inset!important;
+  caret-color:#edf1f7;
+}
+.auth-submit{background:linear-gradient(105deg,#7186a8,#4c607f)!important;color:#fff!important;box-shadow:0 8px 18px rgba(0,0,0,.25)!important}
+.auth-submit:hover:not(:disabled){background:linear-gradient(105deg,#8298ba,#5b7091)!important}
+.auth-switch{color:#a9bfdf!important}
+.auth-guest{background:#2b303a!important;border:1px solid #4a5362!important;color:#dce4ef!important}
+.auth-guest:hover:not(:disabled){background:#343b47!important;border-color:#8299bc!important}
+.auth-divider{color:#929cab!important}
+.auth-divider:before,.auth-divider:after{background:#414854!important}
+.auth-tip-university,.auth-tip-personal{background:#292e38!important;border:1px solid #414957!important}
+.auth-tip strong{color:#e6ecf5!important}
+.auth-tip-badge{background:rgba(130,153,188,.15)!important;color:#b4c7e3!important}
+.auth-tip p{color:#adb7c6!important}
+.auth-footnote{border-color:#414854!important;color:#9aa5b4!important}
