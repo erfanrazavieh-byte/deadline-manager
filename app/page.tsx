@@ -794,7 +794,7 @@ const dailyVerse = dailyVerses[dailyIndex];
           <div className="content">
             {user.guest && <div className="guest-mode-banner">READ-ONLY MODE</div>}
             <div className="page-heading">
-              <div><div className="eyebrow">{activeNav==="نمای کلی"?"خلاصه فعالیت‌ها":"مدیریت وظایف"}</div><h1>{activeNav==="نمای کلی"?"نمای کلی":activeNav}</h1><p>{activeNav==="نمای کلی"?"برنامه امروزت را مرتب کن و با تمرکز جلو برو.":"همه‌چیز را مرتب نگه دار؛ یک کار در هر لحظه."}</p></div>
+              <div><div className="eyebrow">{activeNav==="نمای کلی"?"خلاصه فعالیت‌ها":"مدیریت وظایف"}</div><h1>{activeNav==="نمای کلی"?"نمای کلی":activeNav}</h1>{activeNav==="نمای کلی" && <p>برنامه امروزت را مرتب کن و با تمرکز جلو برو.</p>}</div>
               {!user.guest && <button className="primary-btn" onClick={openNew}><Plus size={18}/> کار جدید</button>}
             </div>
 
