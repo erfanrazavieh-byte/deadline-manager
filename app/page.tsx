@@ -785,7 +785,7 @@ const dailyVerse = dailyVerses[dailyIndex];
             <div className="page-heading"><div><div className="eyebrow">شخصی‌سازی</div><h1>تنظیمات</h1><p>تنظیم تجربه کار با ددلاین</p></div></div>
             <div className="settings-card">
               <div className="settings-row"><div className="settings-icon"><Bell size={20}/></div><div className="settings-copy"><strong>اعلان‌های مرورگر</strong><p>{user.guest ? "برای دریافت یادآور ددلاین‌های دانشگاه، اعلان این دستگاه را فعال کن." : "برای نمایش اعلان، اجازه مرورگر لازم است."}</p><span className={`permission ${permission==="granted"?"ok":""}`}>وضعیت: {permission==="granted"?"فعال":permission==="denied"?"مسدود شده":"نیازمند اجازه"}</span></div><button className="primary-btn compact" onClick={askNotifications}>{notifications?"بررسی مجدد":"فعال‌سازی"}</button></div>
-              <div className="settings-row"><div className="settings-icon"><AlarmClock size={20}/></div><div className="settings-copy"><strong>آزمایش اعلان</strong><p>یک اعلان آزمایشی روی همین دستگاه نمایش بده.</p></div><button className="secondary-btn compact" onClick={testNotification}>ارسال آزمایشی</button></div>
+              {!user.guest && <div className="settings-row"><div className="settings-icon"><AlarmClock size={20}/></div><div className="settings-copy"><strong>آزمایش اعلان</strong><p>یک اعلان آزمایشی روی همین دستگاه نمایش بده.</p></div><button className="secondary-btn compact" onClick={testNotification}>ارسال آزمایشی</button></div>}
               
             </div>
           </div>
@@ -812,18 +812,18 @@ const dailyVerse = dailyVerses[dailyIndex];
                   <div className="filter-wrap status-filter"><select value={statusFilter} onChange={e=>setStatusFilter(e.target.value)} aria-label="فیلتر وضعیت"><option value="همه وضعیت‌ها">همه وضعیت‌ها</option><option value="todo">انجام‌نشده</option><option value="doing">در حال انجام</option><option value="done">انجام‌شده</option></select><ChevronDown size={14}/></div>
                 </div>
                 <div className="task-list">
-                  {shownTasks.length===0 ? <div className="empty-state"><div><CheckCircle2 size={27}/></div><strong>کاری برای نمایش نیست</strong><p>فیلترها را تغییر بده یا یک کار جدید اضافه کن.</p><button className="secondary-btn" onClick={openNew}><Plus size={16}/> ایجاد کار</button></div> :
+                  {shownTasks.length===0 ? <div className="empty-state"><div><CheckCircle2 size={27}/></div><strong>کاری برای نمایش نیست</strong><p>فیلترها را تغییر بده یا یک کار جدید اضافه کن.</p>{!user.guest && <button className="secondary-btn" onClick={openNew}><Plus size={16}/> ایجاد کار</button>}</div> :
                     shownTasks.map(task => {
                       const late = task.status!=="done" && new Date(task.due).getTime()<Date.now();
                       return <article className={`task-row ${task.status==="done"?"task-completed":""}`} key={task.id}>
-                        <button className={`task-check ${task.status==="done"?"checked":""}`} onClick={()=>toggleDone(task)} aria-label={task.status==="done"?"بازگرداندن کار":"تکمیل کار"}>{task.status==="done"&&<Check size={14}/>}</button>
+                        {!user.guest && <button className={`task-check ${task.status==="done"?"checked":""}`} onClick={()=>toggleDone(task)} aria-label={task.status==="done"?"بازگرداندن کار":"تکمیل کار"}>{task.status==="done"&&<Check size={14}/>}</button>}
                         <div className="task-main">
                           <div className="task-title-line"><h3>{task.title}</h3>{late&&<span className="late-pill">عقب‌افتاده</span>}</div>
                           {task.description&&<p className="task-description">{task.description}</p>}
                           <div className="task-meta"><span className={`category-tag ${task.category==="دانشگاه"?"cat-study":task.category==="کار"?"cat-work":task.category==="پروژه شخصی"?"cat-project":"cat-life"}`}><i/>{task.category}</span><span className="task-due"><Clock3 size={13}/>{faDateTime(task.due)}</span>{task.reminders.length>0&&<span className="reminder-count"><Bell size={12}/>{task.reminders.length} یادآور</span>}</div>
                         </div>
                         <div className="task-end"><span className={`time-left ${late?"time-late":""}`}>{task.status==="done"?"انجام‌شده":timeLeft(task.due, clockNow)}</span></div>
-                        <div className="task-actions"><button className="icon-btn small-icon" onClick={()=>openEdit(task)} aria-label="ویرایش"><Pencil size={15}/></button><button className="icon-btn small-icon delete-icon" onClick={()=>deleteTask(task)} aria-label="حذف"><Trash2 size={15}/></button></div>
+                        {!user.guest && <div className="task-actions"><button className="icon-btn small-icon" onClick={()=>openEdit(task)} aria-label="ویرایش"><Pencil size={15}/></button><button className="icon-btn small-icon delete-icon" onClick={()=>deleteTask(task)} aria-label="حذف"><Trash2 size={15}/></button></div>}
                       </article>;
                     })
                   }
