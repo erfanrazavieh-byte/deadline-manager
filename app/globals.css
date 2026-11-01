@@ -1091,3 +1091,67 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .auth-tip-badge{background:rgba(130,153,188,.15)!important;color:#b4c7e3!important}
 .auth-tip p{color:#adb7c6!important}
 .auth-footnote{border-color:#414854!important;color:#9aa5b4!important}
+
+
+/* Richer midnight authentication theme — teal and blue accents */
+.auth-page{
+  background:#111722!important;
+  background-image:
+    radial-gradient(ellipse at 18% 12%,rgba(40,132,151,.22),transparent 42%),
+    radial-gradient(ellipse at 88% 82%,rgba(83,105,174,.22),transparent 42%),
+    linear-gradient(135deg,#111722 0%,#171e2b 55%,#141b29 100%)!important;
+  color:#eaf1f8!important;
+}
+.auth-card{
+  background:linear-gradient(145deg,rgba(34,44,59,.98),rgba(27,35,48,.98))!important;
+  border:1px solid #3b4b60!important;
+  box-shadow:0 26px 75px rgba(0,0,0,.42),0 1px 0 rgba(255,255,255,.035) inset!important;
+}
+.auth-brand-mark{
+  background:linear-gradient(145deg,#36a6a4,#3979a8)!important;
+  box-shadow:0 8px 24px rgba(35,151,158,.25)!important;
+}
+.auth-brand h1,.auth-intro h2{color:#f1f6fc!important}
+.auth-brand p,.auth-intro p{color:#aebdce!important}
+.auth-eyebrow{color:#65d0c5!important}
+.auth-label{color:#dce7f2!important}
+.auth-card input:not([type="checkbox"]),.auth-card select,.auth-card textarea,.auth-input{
+  background:#202b3a!important;
+  background-color:#202b3a!important;
+  color:#eef5fc!important;
+  border:1px solid #40536a!important;
+  box-shadow:none!important;
+}
+.auth-card input::placeholder,.auth-card textarea::placeholder,.auth-input::placeholder{color:#8799ad!important;opacity:1}
+.auth-card input:focus,.auth-card select:focus,.auth-card textarea:focus,.auth-input:focus{
+  border-color:#50b9b4!important;
+  box-shadow:0 0 0 3px rgba(64,183,178,.17)!important;
+}
+.auth-card input:-webkit-autofill,.auth-card input:-webkit-autofill:hover,.auth-card input:-webkit-autofill:focus{
+  -webkit-text-fill-color:#eef5fc!important;
+  -webkit-box-shadow:0 0 0 1000px #202b3a inset!important;
+  caret-color:#eef5fc;
+}
+.auth-submit{
+  background:linear-gradient(105deg,#269f9d,#397fba)!important;
+  color:#fff!important;
+  box-shadow:0 9px 22px rgba(35,143,166,.24)!important;
+}
+.auth-submit:hover:not(:disabled){
+  background:linear-gradient(105deg,#31b3ae,#478fd0)!important;
+  box-shadow:0 12px 26px rgba(35,143,166,.32)!important;
+}
+.auth-switch{color:#72d3ce!important}
+.auth-guest{background:#263448!important;border:1px solid #465d77!important;color:#e0eaf5!important}
+.auth-guest:hover:not(:disabled){background:#30435b!important;border-color:#58aaaF!important}
+.auth-divider{color:#8fa1b5!important}
+.auth-divider:before,.auth-divider:after{background:#3a4a5e!important}
+.auth-tip-university{background:linear-gradient(135deg,#203746,#223545)!important;border:1px solid #35596a!important}
+.auth-tip-personal{background:linear-gradient(135deg,#26334a,#29334a)!important;border:1px solid #465675!important}
+.auth-tip strong{color:#edf5fb!important}
+.auth-tip-badge{background:rgba(69,190,181,.14)!important;color:#75d8ce!important}
+.auth-tip p{color:#b5c5d5!important}
+.auth-footnote{border-color:#3a4b60!important;color:#9eafc1!important}
+@media(max-width:560px){
+  .auth-card{background:linear-gradient(145deg,rgba(34,44,59,.99),rgba(27,35,48,.99))!important;border-color:#3b4b60!important}
+}
