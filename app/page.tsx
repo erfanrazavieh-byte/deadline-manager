@@ -758,7 +758,7 @@ export default function Home() {
         {!user.guest && <button className="add-task-button" onClick={()=>{setShowSettings(false);openNew();}}><Plus size={18}/> ایجاد کار جدید <span>⌘ K</span></button>}{user.guest && <div className="nav-caption">حالت مشاهده مهمان</div>}
         <div className="nav-caption">فضای کاری</div>
         <nav className="nav-list">
-          {(user.guest ? navItems.filter(item => ["نمای کلی","همه کارها","امروز","۷ روز آینده","عقب‌افتاده"].includes(item.name)) : navItems).map(item => {
+          {(user.guest ? navItems.filter(item => ["نمای کلی","همه کارها","امروز","۷ روز آینده"].includes(item.name)) : navItems).map(item => {
             const Icon = item.icon;
             return <button key={item.name} className={`nav-item ${activeNav===item.name && !showPeriodic && !showSettings?"active":""}`} onClick={()=>{setActiveNav(item.name);setShowSettings(false);setShowPeriodic(false);setShowSharedImport(false);setMobileMenu(false);}}>
               <Icon size={18}/><span>{item.name}</span>{item.count !== undefined && <small>{item.count}</small>}
@@ -869,7 +869,7 @@ export default function Home() {
             {activeNav==="نمای کلی" && <div className="stats-grid">
               <div className="stat-card"><div className="stat-top"><span>کارهای فعال</span><div className="stat-icon purple"><ListTodo size={18}/></div></div><div className="stat-value">{activeTasks.length.toLocaleString("fa-IR")}</div><div className="stat-foot"><span className="dot purple-dot"/>کار باقی‌مانده</div></div>
               <div className="stat-card"><div className="stat-top"><span>ددلاین امروز</span><div className="stat-icon blue"><CalendarDays size={18}/></div></div><div className="stat-value">{todayTasks.length.toLocaleString("fa-IR")}</div><div className="stat-foot">برای امروز برنامه‌ریزی شده</div></div>
-              <div className="stat-card"><div className="stat-top"><span>عقب‌افتاده</span><div className="stat-icon red"><Clock3 size={18}/></div></div><div className="stat-value">{overdueTasks.length.toLocaleString("fa-IR")}</div><div className="stat-foot">{overdueTasks.length?"نیازمند بررسی":"همه‌چیز تحت کنترل"}</div></div>
+              {user.guest ? <div className="stat-card"><div className="stat-top"><span>ددلاین‌های گذشته</span><div className="stat-icon red"><Clock3 size={18}/></div></div><div className="stat-value">{overdueTasks.length.toLocaleString("fa-IR")}</div><div className="stat-foot">وضعیت انجام این کارها مشخص نیست</div></div> : <div className="stat-card"><div className="stat-top"><span>عقب‌افتاده</span><div className="stat-icon red"><Clock3 size={18}/></div></div><div className="stat-value">{overdueTasks.length.toLocaleString("fa-IR")}</div><div className="stat-foot">{overdueTasks.length?"نیازمند بررسی":"همه‌چیز تحت کنترل"}</div></div>}
               <div className="stat-card next-stat"><div className="stat-top"><span>نزدیک‌ترین ددلاین</span><div className="stat-icon green"><AlarmClock size={18}/></div></div><div className="next-title">{nextTask?.title || "ددلاین فعالی نیست"}</div><div className="stat-foot">{nextTask?timeLeft(nextTask.due, clockNow):"می‌توانی یک کار جدید بسازی"}</div></div>
             </div>}
 
@@ -887,11 +887,11 @@ export default function Home() {
                       return <article className={`task-row ${task.status==="done"?"task-completed":""}`} key={task.id}>
                         {!user.guest && <button className={`task-check ${task.status==="done"?"checked":""}`} onClick={()=>toggleDone(task)} aria-label={task.status==="done"?"بازگرداندن کار":"تکمیل کار"}>{task.status==="done"&&<Check size={14}/>}</button>}
                         <div className="task-main">
-                          <div className="task-title-line"><h3>{task.title}</h3>{late&&<span className="late-pill">عقب‌افتاده</span>}</div>
+                          <div className="task-title-line"><h3>{task.title}</h3>{late&&!user.guest&&<span className="late-pill">عقب‌افتاده</span>}</div>
                           {task.description&&<p className="task-description">{task.description}</p>}
                           <div className="task-meta"><span className={`category-tag ${task.category==="دانشگاه"?"cat-study":task.category==="کار"?"cat-work":task.category==="پروژه شخصی"?"cat-project":"cat-life"}`}><i/>{task.category}</span><span className="task-due"><Clock3 size={13}/>{faDateTime(task.due)}</span>{task.reminders.length>0&&<span className="reminder-count"><Bell size={12}/>{task.reminders.length} یادآور</span>}</div>
                         </div>
-                        <div className="task-end"><span className={`time-left ${late?"time-late":""}`}>{task.status==="done"?"انجام‌شده":timeLeft(task.due, clockNow)}</span></div>
+                        <div className="task-end"><span className={`time-left ${late?"time-late":""}`}>{task.status==="done"?"انجام‌شده":user.guest?"وضعیت انجام مشخص نیست":timeLeft(task.due, clockNow)}</span></div>
                         {!user.guest && <div className="task-actions"><button className="icon-btn small-icon" onClick={()=>openEdit(task)} aria-label="ویرایش"><Pencil size={15}/></button><button className="icon-btn small-icon delete-icon" onClick={()=>deleteTask(task)} aria-label="حذف"><Trash2 size={15}/></button></div>}
                       </article>;
                     })
