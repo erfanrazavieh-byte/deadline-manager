@@ -536,25 +536,14 @@ export default function Home() {
       if (!endpoint || !p256dh || !auth) {
         throw new Error("اطلاعات اشتراک اعلان کامل نیست؛ اعلان را دوباره فعال کن.");
       }
-      const { data: existing, error: lookupError } = await supabase
-        .from("push_subscriptions")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("endpoint", endpoint)
-        .maybeSingle();
-      if (lookupError) throw lookupError;
-      const subscriptionData = {
-        user_id: user.id,
-        guest_for_user_id: user.guest ? GUEST_OWNER_ID : null,
-        endpoint,
-        p256dh,
-        auth,
-        updated_at: new Date().toISOString(),
-      };
-      const save = existing
-        ? await supabase.from("push_subscriptions").update(subscriptionData).eq("id", existing.id).eq("user_id", user.id)
-        : await supabase.from("push_subscriptions").insert(subscriptionData);
-      if (save.error) throw save.error;
+      // Save atomically by endpoint. The server derives the owner from the
+      // authenticated session and safely reassigns this device when accounts change.
+      const { error: saveError } = await supabase.rpc("save_push_subscription", {
+        p_endpoint: endpoint,
+        p_p256dh: p256dh,
+        p_auth: auth,
+      });
+      if (saveError) throw saveError;
       setNotifications(true);
       localStorage.setItem("deadline-manager-notifications", "true");
       setToast("اعلان‌های این دستگاه برای دریافت یادآورها فعال شد.");
