@@ -849,7 +849,7 @@ export default function Home() {
           </div>
         ) : (
           <div className="content">
-            {user.guest && <div className="guest-mode-banner">READ-ONLY MODE</div>}
+            {user.guest && <div className="guest-mode-banner"><strong>نمایش فقط‌خواندنی</strong><span>ددلاین‌های دانشگاه را می‌بینی؛ امکان ویرایش در حالت مهمان غیرفعال است.</span></div>}
             <div className="page-heading">
               <div><div className="eyebrow">{activeNav==="نمای کلی"?"خلاصه فعالیت‌ها":"مدیریت وظایف"}</div><h1>{activeNav==="نمای کلی"?"نمای کلی":activeNav}</h1>{activeNav==="نمای کلی" ? <p>برنامه امروزت را مرتب کن و با تمرکز جلو برو.</p> : activeNav==="همه کارها" ? <p>ددلاین ثبت کن و اعلان یادآور دریافت کن</p> : null}</div>
               {!user.guest && <button className="primary-btn" onClick={openNew}><Plus size={18}/> کار جدید</button>}
@@ -894,7 +894,7 @@ export default function Home() {
                           {task.description&&<p className="task-description">{task.description}</p>}
                           <div className="task-meta"><span className={`category-tag ${task.category==="دانشگاه"?"cat-study":task.category==="کار"?"cat-work":task.category==="پروژه شخصی"?"cat-project":"cat-life"}`}><i/>{task.category}</span><span className="task-due"><Clock3 size={13}/>{faDateTime(task.due)}</span>{task.reminders.length>0&&<span className="reminder-count"><Bell size={12}/>{task.reminders.length} یادآور</span>}</div>
                         </div>
-                        <div className="task-end"><span className={`time-left ${late?"time-late":""}`}>{task.status==="done"?"انجام‌شده":user.guest?(task.status==="doing"?"در حال انجام":"انجام‌نشده"):timeLeft(task.due, clockNow)}</span></div>
+                        <div className="task-end"><span className={`time-left ${late?"time-late":""} ${user.guest?`guest-status guest-status-${task.status}`:""}`}>{task.status==="done"?"انجام‌شده":user.guest?(task.status==="doing"?"در حال انجام":"انجام‌نشده"):timeLeft(task.due, clockNow)}</span></div>
                         {!user.guest && <div className="task-actions"><button className="icon-btn small-icon" onClick={()=>openEdit(task)} aria-label="ویرایش"><Pencil size={15}/></button><button className="icon-btn small-icon delete-icon" onClick={()=>deleteTask(task)} aria-label="حذف"><Trash2 size={15}/></button></div>}
                       </article>;
                     })
