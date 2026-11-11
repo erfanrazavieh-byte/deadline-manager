@@ -1403,3 +1403,97 @@ body{font-size:14px}
  .guest-content .time-left.guest-status{font-size:10px;padding:6px 9px}
  .guest-content .task-meta{gap:8px}
 }
+
+
+/* Unified visual system: remove conflicting teal/purple overrides. */
+:root{
+  --bg:#f4f6fb;
+  --surface:#ffffff;
+  --ink:#202638;
+  --muted:#788197;
+  --line:#e3e8f1;
+  --purple:#596fe0;
+  --purple-light:#edf0ff;
+  --shadow:0 8px 26px rgba(29,42,76,.055);
+}
+:root[data-theme="dark"]{
+  --bg:#111827;
+  --surface:#1b2434;
+  --ink:#edf1fa;
+  --muted:#a1acc1;
+  --line:#303c50;
+  --purple:#9aa9ff;
+  --purple-light:#293451;
+  --shadow:0 8px 26px rgba(0,0,0,.16);
+}
+@media(prefers-color-scheme:dark){
+  :root[data-theme="system"]{
+    --bg:#111827;
+    --surface:#1b2434;
+    --ink:#edf1fa;
+    --muted:#a1acc1;
+    --line:#303c50;
+    --purple:#9aa9ff;
+    --purple-light:#293451;
+    --shadow:0 8px 26px rgba(0,0,0,.16);
+  }
+}
+html,body{background:var(--bg);color:var(--ink)}
+.sidebar,.topbar,.mobile-bottom{background:var(--surface);color:var(--ink)}
+.sidebar{border-color:var(--line)}
+.topbar{border-bottom:1px solid var(--line)}
+.brand-mark,.add-task-button,.primary-btn{background:var(--purple);color:#fff}
+.add-task-button:hover,.primary-btn:hover{background:#485dcc}
+.nav-item{color:var(--muted)}
+.nav-item.active,.nav-item:hover{background:var(--purple-light);color:var(--purple)}
+.nav-item small{background:var(--bg);color:var(--muted)}
+.breadcrumbs strong,.page-heading h1,.section-heading h2,.calendar-head h2,.upcoming-head h2{color:var(--ink)}
+.stat-card,.tasks-section,.calendar-card,.upcoming-card,.settings-card{
+ background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)
+}
+.stat-icon.purple,.stat-icon.blue,.stat-icon.green,.upcoming-icon,.empty-state>div,.settings-icon{
+ background:var(--purple-light);color:var(--purple)
+}
+.search-box,.filter-wrap,.field-label input,.field-label textarea,.field-label select{
+ background:var(--bg);color:var(--ink);border-color:var(--line)
+}
+.search-box input,.filter-wrap select{color:var(--ink)}
+.task-row{border-color:var(--line)}
+.task-row:hover{background:color-mix(in srgb,var(--purple-light) 48%,transparent)}
+.task-check{background:var(--bg);border-color:var(--line)}
+.task-check.checked{background:#32866b;border-color:#32866b}
+.cat-study{background:var(--purple-light);color:var(--purple)}
+.cat-work{background:#e8f2ff;color:#4778bd}
+.cat-project{background:#fff2e4;color:#b87932}
+.cat-life{background:#e6f5ee;color:#398264}
+.calendar-day{color:var(--muted)}
+.calendar-day.today{background:var(--purple);color:#fff}
+.calendar-day.has-task:not(.today){background:var(--purple-light);color:var(--purple)}
+.mobile-bottom{border-color:var(--line);box-shadow:0 -5px 20px rgba(20,30,50,.08)}
+.mobile-bottom button{color:var(--muted)}
+.mobile-bottom button.selected,.mobile-bottom button:nth-child(3){color:var(--purple)}
+.mobile-bottom button:nth-child(3) svg{background:var(--purple);color:#fff}
+.guest-mode-banner{
+ background:var(--surface);color:var(--ink);border:1px solid var(--line);
+ border-right:3px solid var(--purple);box-shadow:none
+}
+.guest-mode-banner strong{font-family:'Vazirmatn',Tahoma,sans-serif;font-size:13px;letter-spacing:0}
+.guest-mode-banner span{color:var(--muted)}
+.guest-content .task-row{background:var(--bg);border-color:var(--line)}
+.guest-content .time-left.guest-status{background:var(--purple-light);color:var(--purple)}
+.guest-content .time-left.guest-status-done{background:#e1f3e9;color:#24734c}
+.guest-content .time-left.guest-status-doing{background:#fff0d8;color:#946018}
+:root[data-theme="dark"] .guest-content .time-left.guest-status-done{background:#203d31;color:#9ad9b6}
+:root[data-theme="dark"] .guest-content .time-left.guest-status-doing{background:#44351f;color:#f0c77e}
+.secondary-btn{background:var(--surface);color:var(--muted);border-color:var(--line)}
+.secondary-btn:hover{background:var(--purple-light);color:var(--purple);border-color:var(--purple)}
+.task-modal{background:var(--surface);color:var(--ink)}
+.field-label{color:var(--ink)}
+.reminder-field{background:var(--bg);border-color:var(--line)}
+.reminder-option{background:var(--surface);border-color:var(--line);color:var(--muted)}
+.reminder-option.selected{background:var(--purple-light);border-color:var(--purple);color:var(--purple)}
+@media(max-width:700px){
+ .guest-mode-banner{margin-bottom:17px;padding:12px 14px}
+ .guest-content .task-row{background:var(--bg)}
+ .mobile-bottom{background:var(--surface)}
+}
