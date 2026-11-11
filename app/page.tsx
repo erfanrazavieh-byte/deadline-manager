@@ -855,6 +855,20 @@ export default function Home() {
               {!user.guest && <button className="primary-btn" onClick={openNew}><Plus size={18}/> کار جدید</button>}
             </div>
 
+            {activeNav==="نمای کلی" && <section className="dashboard-focus" aria-label="خلاصه برنامه امروز">
+              <div className="dashboard-focus-copy">
+                <span className="dashboard-kicker">برنامه‌ریزی روزانه</span>
+                <h2>{todayTasks.length ? `${todayTasks.length.toLocaleString("fa-IR")} ددلاین برای امروز داری` : "امروز را با تمرکز شروع کن"}</h2>
+                <p>{overdueTasks.length ? `${overdueTasks.length.toLocaleString("fa-IR")} کار عقب‌افتاده نیاز به رسیدگی دارد.` : "کارهای مهمت را جلو ببر؛ باقی مسیر را مرحله‌به‌مرحله انجام بده."}</p>
+                <div className="dashboard-progress"><span style={{width: `${activeTasks.length + tasks.filter(t=>t.status==="done").length ? Math.round(tasks.filter(t=>t.status==="done").length / (activeTasks.length + tasks.filter(t=>t.status==="done").length) * 100) : 0}%`}} /></div>
+                <small>{tasks.filter(t=>t.status==="done").length.toLocaleString("fa-IR")} از {(activeTasks.length + tasks.filter(t=>t.status==="done").length).toLocaleString("fa-IR")} کار تکمیل شده</small>
+              </div>
+              <div className="dashboard-focus-side">
+                <div className="focus-number">{todayTasks.length.toLocaleString("fa-IR")}<span>امروز</span></div>
+                {!user.guest && <button type="button" className="dashboard-add" onClick={openNew}><Plus size={17}/> افزودن کار</button>}
+              </div>
+            </section>}
+
             {activeNav==="نمای کلی" && <div className="stats-grid">
               <div className="stat-card"><div className="stat-top"><span>کارهای فعال</span><div className="stat-icon purple"><ListTodo size={18}/></div></div><div className="stat-value">{activeTasks.length.toLocaleString("fa-IR")}</div><div className="stat-foot"><span className="dot purple-dot"/>کار باقی‌مانده</div></div>
               <div className="stat-card"><div className="stat-top"><span>ددلاین امروز</span><div className="stat-icon blue"><CalendarDays size={18}/></div></div><div className="stat-value">{todayTasks.length.toLocaleString("fa-IR")}</div><div className="stat-foot">برای امروز برنامه‌ریزی شده</div></div>
