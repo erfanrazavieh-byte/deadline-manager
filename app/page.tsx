@@ -191,7 +191,7 @@ export default function Home() {
         if (error) setToast("بارگذاری ددلاین‌ها ناموفق بود: " + error.message);
         else setTasks((data || []).map((row: any) => ({
           id: row.id, title: row.title, description: row.description || "", due: row.due,
-          category: row.category, priority: row.priority, status: row.status || "todo",
+          category: row.category, priority: row.priority, status: user.guest ? "todo" : row.status,
           reminders: row.reminders || [], createdAt: row.created_at
         })));
         setReady(true);
@@ -848,26 +848,12 @@ export default function Home() {
             </div>
           </div>
         ) : (
-          <div className={`content ${user.guest?"guest-content":""}`}>
-            {user.guest && <div className="guest-mode-banner"><strong>READ-ONLY MODE</strong><span>ددلاین‌های دانشگاه را می‌بینی؛ امکان ویرایش در حالت مهمان غیرفعال است.</span></div>}
+          <div className="content">
+            {user.guest && <div className="guest-mode-banner">READ-ONLY MODE</div>}
             <div className="page-heading">
               <div><div className="eyebrow">{activeNav==="نمای کلی"?"خلاصه فعالیت‌ها":"مدیریت وظایف"}</div><h1>{activeNav==="نمای کلی"?"نمای کلی":activeNav}</h1>{activeNav==="نمای کلی" ? <p>برنامه امروزت را مرتب کن و با تمرکز جلو برو.</p> : activeNav==="همه کارها" ? <p>ددلاین ثبت کن و اعلان یادآور دریافت کن</p> : null}</div>
               {!user.guest && <button className="primary-btn" onClick={openNew}><Plus size={18}/> کار جدید</button>}
             </div>
-
-            {activeNav==="نمای کلی" && <section className="dashboard-focus" aria-label="خلاصه برنامه امروز">
-              <div className="dashboard-focus-copy">
-                <span className="dashboard-kicker">برنامه‌ریزی روزانه</span>
-                <h2>{todayTasks.length ? `${todayTasks.length.toLocaleString("fa-IR")} ددلاین برای امروز داری` : "امروز را با تمرکز شروع کن"}</h2>
-                <p>{overdueTasks.length ? `${overdueTasks.length.toLocaleString("fa-IR")} کار عقب‌افتاده نیاز به رسیدگی دارد.` : "کارهای مهمت را جلو ببر؛ باقی مسیر را مرحله‌به‌مرحله انجام بده."}</p>
-                <div className="dashboard-progress"><span style={{width: `${activeTasks.length + tasks.filter(t=>t.status==="done").length ? Math.round(tasks.filter(t=>t.status==="done").length / (activeTasks.length + tasks.filter(t=>t.status==="done").length) * 100) : 0}%`}} /></div>
-                <small>{tasks.filter(t=>t.status==="done").length.toLocaleString("fa-IR")} از {(activeTasks.length + tasks.filter(t=>t.status==="done").length).toLocaleString("fa-IR")} کار تکمیل شده</small>
-              </div>
-              <div className="dashboard-focus-side">
-                <div className="focus-number">{todayTasks.length.toLocaleString("fa-IR")}<span>امروز</span></div>
-                {!user.guest && <button type="button" className="dashboard-add" onClick={openNew}><Plus size={17}/> افزودن کار</button>}
-              </div>
-            </section>}
 
             {activeNav==="نمای کلی" && <div className="stats-grid">
               <div className="stat-card"><div className="stat-top"><span>کارهای فعال</span><div className="stat-icon purple"><ListTodo size={18}/></div></div><div className="stat-value">{activeTasks.length.toLocaleString("fa-IR")}</div><div className="stat-foot"><span className="dot purple-dot"/>کار باقی‌مانده</div></div>
@@ -894,7 +880,7 @@ export default function Home() {
                           {task.description&&<p className="task-description">{task.description}</p>}
                           <div className="task-meta"><span className={`category-tag ${task.category==="دانشگاه"?"cat-study":task.category==="کار"?"cat-work":task.category==="پروژه شخصی"?"cat-project":"cat-life"}`}><i/>{task.category}</span><span className="task-due"><Clock3 size={13}/>{faDateTime(task.due)}</span>{task.reminders.length>0&&<span className="reminder-count"><Bell size={12}/>{task.reminders.length} یادآور</span>}</div>
                         </div>
-                        <div className="task-end"><span className={`time-left ${late?"time-late":""} ${user.guest?`guest-status guest-status-${task.status}`:""}`}>{task.status==="done"?"انجام‌شده":user.guest?`${task.status==="doing"?"در حال انجام":"انجام‌نشده"} · ${timeLeft(task.due, clockNow)}`:timeLeft(task.due, clockNow)}</span></div>
+                        <div className="task-end"><span className={`time-left ${late?"time-late":""}`}>{task.status==="done"?"انجام‌شده":user.guest?"وضعیت انجام مشخص نیست":timeLeft(task.due, clockNow)}</span></div>
                         {!user.guest && <div className="task-actions"><button className="icon-btn small-icon" onClick={()=>openEdit(task)} aria-label="ویرایش"><Pencil size={15}/></button><button className="icon-btn small-icon delete-icon" onClick={()=>deleteTask(task)} aria-label="حذف"><Trash2 size={15}/></button></div>}
                       </article>;
                     })
