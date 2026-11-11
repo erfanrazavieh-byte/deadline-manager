@@ -1363,3 +1363,43 @@ body{font-size:14px}
  .calendar-card,.upcoming-card{padding:16px}
 }
 @media(max-width:370px){.dashboard-focus{padding:17px 13px}.dashboard-focus h2{font-size:16px}.dashboard-focus-copy{width:calc(100% - 78px)}.focus-number{font-size:30px}.dashboard-add{font-size:9px;padding:8px}}
+
+
+/* Guest deadline board: compact status-led cards on mobile and desktop. */
+.guest-mode-banner{
+ display:flex;flex-direction:column;gap:4px;margin:0 0 22px;padding:13px 16px;
+ border:1px solid var(--line);border-right:3px solid var(--purple);border-radius:10px;
+ background:var(--surface);color:var(--ink);box-shadow:none
+}
+.guest-mode-banner strong{font-size:13px;font-weight:750;letter-spacing:0}
+.guest-mode-banner span{font-size:11px;color:var(--muted);line-height:1.8}
+.guest-content .tasks-section{padding-bottom:12px}
+.guest-content .task-list{display:grid;gap:9px;padding:5px 0 14px}
+.guest-content .task-row{
+ display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;
+ padding:15px 16px;border:1px solid var(--line);border-radius:12px;
+ background:var(--bg);min-width:0
+}
+.guest-content .task-row:last-child{border-bottom:1px solid var(--line)}
+.guest-content .task-main{min-width:0}
+.guest-content .task-title-line h3{font-size:13px;font-weight:700;line-height:1.7}
+.guest-content .task-meta{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin-top:8px}
+.guest-content .task-end{min-width:0;display:flex;justify-content:flex-end;align-items:center}
+.guest-content .time-left.guest-status{
+ display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;
+ padding:7px 10px;border-radius:7px;font-size:10px;font-weight:750;
+ background:var(--purple-light);color:var(--purple)
+}
+.guest-content .time-left.guest-status-done{background:#dff3e8;color:#20754c}
+.guest-content .time-left.guest-status-doing{background:#fff0d8;color:#946018}
+:root[data-theme="dark"] .guest-content .time-left.guest-status-done{background:#203d31;color:#9ad9b6}
+:root[data-theme="dark"] .guest-content .time-left.guest-status-doing{background:#44351f;color:#f0c77e}
+@media(max-width:700px){
+ .guest-mode-banner{margin-bottom:17px;padding:12px 14px}
+ .guest-content .tasks-section{padding:15px 12px 8px}
+ .guest-content .task-list{gap:8px}
+ .guest-content .task-row{grid-template-columns:minmax(0,1fr);gap:10px;padding:14px 12px;border-radius:11px}
+ .guest-content .task-end{grid-column:1;grid-row:auto;justify-content:flex-start}
+ .guest-content .time-left.guest-status{font-size:10px;padding:6px 9px}
+ .guest-content .task-meta{gap:8px}
+}
