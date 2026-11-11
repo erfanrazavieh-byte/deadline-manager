@@ -848,7 +848,7 @@ export default function Home() {
             </div>
           </div>
         ) : (
-          <div className="content">
+          <div className={`content ${user.guest?"guest-content":""}`}>
             {user.guest && <div className="guest-mode-banner"><strong>نمایش فقط‌خواندنی</strong><span>ددلاین‌های دانشگاه را می‌بینی؛ امکان ویرایش در حالت مهمان غیرفعال است.</span></div>}
             <div className="page-heading">
               <div><div className="eyebrow">{activeNav==="نمای کلی"?"خلاصه فعالیت‌ها":"مدیریت وظایف"}</div><h1>{activeNav==="نمای کلی"?"نمای کلی":activeNav}</h1>{activeNav==="نمای کلی" ? <p>برنامه امروزت را مرتب کن و با تمرکز جلو برو.</p> : activeNav==="همه کارها" ? <p>ددلاین ثبت کن و اعلان یادآور دریافت کن</p> : null}</div>
